@@ -65,10 +65,7 @@ func (s *SShX) C() (*SShX, error) {
 		return nil, fmt.Errorf("password or private key is required")
 	}
 	config := &ssh.ClientConfig{
-		User: s.username,
-		//Auth: []ssh.AuthMethod{
-		//	ssh.Password(s.password),
-		//},
+		User:            s.username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 	if s.password != "" {
@@ -92,6 +89,13 @@ func (s *SShX) C() (*SShX, error) {
 	s.client = client
 
 	return s, nil
+}
+
+func (s *SShX) Close() error {
+	if s.client == nil {
+		return nil
+	}
+	return s.client.Close()
 }
 
 func (s *SShX) MustC() *SShX {
@@ -131,5 +135,13 @@ func (s *SShX) ExecuteCommandWithStream(command string, stdout, stderr io.Writer
 		return fmt.Errorf("failed to execute command: %v", err)
 	}
 
+	return nil
+}
+
+func (s *SShX) DeleteFiles(path string) error {
+	_, err := s.ExecuteCommand(fmt.Sprintf("rm -rf %s", path))
+	if err != nil {
+		return fmt.Errorf("failed to delete remote file: %v", err)
+	}
 	return nil
 }

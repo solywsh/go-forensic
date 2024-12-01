@@ -10,4 +10,5 @@ require (
 require (
 	github.com/kr/fs v0.1.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
+	howett.net/plist v1.0.1 // indirect
 )
