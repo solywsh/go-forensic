@@ -42,11 +42,9 @@ func (t *SqliteX) SearchByKeywords(keywords ...string) error {
 		// get column information for each table
 		columnRows, err := db.Query(fmt.Sprintf("PRAGMA table_info(\"%s\");", tableName))
 		if err != nil {
-			// 如果获取列信息失败，跳过该表，继续检查下一个表
-			//fmt.Printf("发生错误: 获取表 %s 列信息失败: %v\n", tableName, err)
+			log.Error("failed to get column information", "table", tableName, "error", err)
 			continue
 		}
-
 		var columnName string
 		for columnRows.Next() {
 			var cid int
@@ -65,7 +63,7 @@ func (t *SqliteX) SearchByKeywords(keywords ...string) error {
 				}
 				// If a record containing the keyword is found in this column, output the information.
 				if rowsInColumn.Next() {
-					fmt.Printf("found keyword '%s' in column '%s' of table '%s'\n", tableName, columnName, keyword)
+					log.Info("found keyword", "table", tableName, "column", columnName, "keyword", keyword)
 				}
 				rowsInColumn.Close()
 			}

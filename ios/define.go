@@ -1,6 +1,9 @@
 package ios
 
-import "github.com/solywsh/go-forensic/utils/osx"
+import (
+	"github.com/solywsh/go-forensic/utils/logger"
+	"github.com/solywsh/go-forensic/utils/osx"
+)
 
 const (
 	ApplicationPath       = "/private/var/mobile/Containers/Data/Application"
@@ -10,10 +13,13 @@ const (
 	ActiveFileName = "active.tar"
 )
 
-var focusPathList = []string{
-	ApplicationPath,
-	AppGroupPath,
-}
+var (
+	focusPathList = []string{
+		ApplicationPath,
+		AppGroupPath,
+	}
+	log = logger.NewLogger()
+)
 
 type IOS struct {
 	username       string

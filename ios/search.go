@@ -28,7 +28,7 @@ func (t *IOS) SearchByKeywords(keywords ...string) error {
 	for _, focusPath := range focusPathList {
 		err = t.handleFiles(focusPath)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 		}
 	}
 	return nil
@@ -43,16 +43,16 @@ func (t *IOS) handleFiles(tryPath string) error {
 		if !containerDir.IsDir() {
 			continue
 		}
-		err := t.handle(tryPath, containerDir)
+		err := t.handleContainerDir(tryPath, containerDir)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 		}
 	}
 	return nil
 }
 
-func (t *IOS) handle(tryPath string, containerFile os.FileInfo) error {
-	containerFileList, err := t.sftpClient.ReadDir(pathx.PathJoin(tryPath, containerFile.Name()))
+func (t *IOS) handleContainerDir(tryPath string, containerDir os.FileInfo) error {
+	containerFileList, err := t.sftpClient.ReadDir(pathx.PathJoin(tryPath, containerDir.Name()))
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (t *IOS) handle(tryPath string, containerFile os.FileInfo) error {
 	if !exist {
 		return nil
 	}
-	containerMetaDataFilePath := pathx.PathJoin(tryPath, containerFile.Name(), ContainerMetaDataFile)
+	containerMetaDataFilePath := pathx.PathJoin(tryPath, containerDir.Name(), ContainerMetaDataFile)
 	file, err := t.sftpClient.Open(containerMetaDataFilePath)
 	defer file.Close()
 	if err != nil {
@@ -87,8 +87,7 @@ func (t *IOS) handle(tryPath string, containerFile os.FileInfo) error {
 	if !t.ComparisonKeywords(packageInfo.PackageName) {
 		return nil
 	}
-	fmt.Println("hit: ", packageInfo.PackageName)
-	remoteDir := pathx.PathJoin(tryPath, containerFile.Name())
+	remoteDir := pathx.PathJoin(tryPath, containerDir.Name())
 	remoteTarPath := pathx.PathJoin(tryPath, ActiveFileName)
 	_, err = t.sshClient.ExecuteCommand(fmt.Sprintf("tar --ignore-failed-read -cf %s %s", remoteTarPath, remoteDir))
 	if err != nil {
@@ -105,7 +104,7 @@ func (t *IOS) handle(tryPath string, containerFile os.FileInfo) error {
 	defer func() {
 		os.RemoveAll(localTarPath)
 	}()
-	destinationDir := filepath.Join(t.output, tryPath, containerFile.Name())
+	destinationDir := filepath.Join(t.output, tryPath, containerDir.Name())
 	if pathx.PathExists(destinationDir) {
 		os.RemoveAll(destinationDir)
 	}
@@ -123,6 +122,7 @@ func (t *IOS) handle(tryPath string, containerFile os.FileInfo) error {
 func (t *IOS) ComparisonKeywords(str string) bool {
 	for _, keyword := range t.keywords {
 		if strings.Contains(strings.ToLower(str), strings.ToLower(keyword)) {
+			log.Info("Hit keywords", "packageName", str, "keywords", keyword)
 			return true
 		}
 	}

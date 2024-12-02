@@ -6,22 +6,39 @@ A forensic tool🔧 for mobile phone
 
 ## TODO
 
-### ios
+### Base
 
-- [ ] list package names
+- [ ] log
+- [ ] output interface
+- [ ] cmd
+
+### iOS
+
+search
+
+- [ ] separate search and export functions
 - [ ] search by app names
 - [ ] more comparison methods
 
-### base
+list
 
-- [ ] log output
-- [ ] find by folder
+- [ ] list package names
+- [ ] list app names
+
+export
+
+- [ ] before exporting, clear the path of other folders.
 
 ### Database
 
 sqlite：
 
 - [ ] output by table
+- [ ] find by folder
+
+mmkv
+
+- [ ] mmkv basic functions with cgo
 
 ## Requirement
 

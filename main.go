@@ -1,1 +1,5 @@
-package go_forensic
+package main
+
+func main() {
+
+}
