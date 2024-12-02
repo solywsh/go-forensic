@@ -76,7 +76,12 @@ func (t *IOS) SearchKeywords(keywords string) error {
 		return nil
 	}
 	defer sftpClient.Close()
-
+	for _, s := range focusPathList {
+		err = t.handleFiles(keywords, s, sftpClient, sshClient)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 	return nil
 }
 
@@ -106,7 +111,6 @@ func (t *IOS) handleFiles(keywords, tryPath string, sftpClient *osx.SftpX, sshCl
 			if !exist {
 				return nil
 			}
-			// 这里不能直接open，如果打开失败或者不存在的情况，会直接panic
 			containerMetaDataFilePath := pathx.PathJoin(tryPath, containerDir.Name(), ContainerMetaDataFile)
 			file, err := sftpClient.Open(containerMetaDataFilePath)
 			defer file.Close()
@@ -123,7 +127,8 @@ func (t *IOS) handleFiles(keywords, tryPath string, sftpClient *osx.SftpX, sshCl
 			if _, err := plist.Unmarshal(content, packageInfo); err != nil {
 				return err
 			}
-			if !strings.Contains(packageInfo.PackageName, keywords) {
+			fmt.Println("find：", packageInfo.PackageName)
+			if !strings.Contains(strings.ToLower(packageInfo.PackageName), strings.ToLower(keywords)) {
 				return nil
 			}
 			fmt.Println("hit：", packageInfo.PackageName)
@@ -136,7 +141,6 @@ func (t *IOS) handleFiles(keywords, tryPath string, sftpClient *osx.SftpX, sshCl
 			defer func() {
 				sshClient.DeleteFiles(remoteTarPath)
 			}()
-			// 因为到本地，所以使用filepath.Join
 			localTarPath := filepath.Join(t.output, ActiveFileName)
 			err = sftpClient.DownloadFile(remoteTarPath, localTarPath)
 			if err != nil {
