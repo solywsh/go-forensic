@@ -18,7 +18,6 @@ func (s *SShX) SFTP() *SftpX {
 	}
 	sftpClient, err := sftp.NewClient(s.client)
 	if err != nil {
-		// TODO log error
 		return nil
 	}
 	return &SftpX{

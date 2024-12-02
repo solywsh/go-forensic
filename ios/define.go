@@ -1,5 +1,7 @@
 package ios
 
+import "github.com/solywsh/go-forensic/utils/osx"
+
 const (
 	ApplicationPath       = "/private/var/mobile/Containers/Data/Application"
 	AppGroupPath          = "/private/var/mobile/Containers/Shared/AppGroup"
@@ -11,4 +13,62 @@ const (
 var focusPathList = []string{
 	ApplicationPath,
 	AppGroupPath,
+}
+
+type IOS struct {
+	username       string
+	passwd         string
+	host           string
+	port           string
+	privateKeyPath string
+	output         string
+
+	sshClient  *osx.SShX
+	sftpClient *osx.SftpX
+	keywords   []string
+}
+
+func NewIOS() *IOS {
+	return &IOS{
+		username:       "root",
+		passwd:         "alpine",
+		host:           "127.0.0.1",
+		port:           "22",
+		privateKeyPath: "",
+		output:         "./temp",
+	}
+}
+
+func (t *IOS) SetUsername(username string) *IOS {
+	t.username = username
+	return t
+}
+
+func (t *IOS) SetPasswd(passwd string) *IOS {
+	t.passwd = passwd
+	return t
+}
+
+func (t *IOS) SetHost(host string) *IOS {
+	t.host = host
+	return t
+}
+
+func (t *IOS) SetPort(port string) *IOS {
+	t.port = port
+	return t
+}
+
+func (t *IOS) SetPrivateKeyPath(privateKeyPath string) *IOS {
+	t.privateKeyPath = privateKeyPath
+	return t
+}
+
+func (t *IOS) SetOutput(output string) *IOS {
+	t.output = output
+	return t
+}
+
+func (t *IOS) ssh() *osx.SShX {
+	return osx.NewSSH().SetHost(t.host).SetPort(t.port).SetUsername(t.username).SetPassword(t.passwd).SetPrivateKeyPath(t.privateKeyPath)
 }

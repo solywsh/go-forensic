@@ -11,66 +11,7 @@ import (
 	"strings"
 )
 
-type IOS struct {
-	username       string
-	passwd         string
-	host           string
-	port           string
-	privateKeyPath string
-	output         string
-
-	sshClient  *osx.SShX
-	sftpClient *osx.SftpX
-	// TODO support more comparison methods
-	keywords []string
-}
-
-func NewIOS() *IOS {
-	return &IOS{
-		username:       "root",
-		passwd:         "alpine",
-		host:           "127.0.0.1",
-		port:           "22",
-		privateKeyPath: "",
-		output:         "./temp",
-	}
-}
-
-func (t *IOS) SetUsername(username string) *IOS {
-	t.username = username
-	return t
-}
-
-func (t *IOS) SetPasswd(passwd string) *IOS {
-	t.passwd = passwd
-	return t
-}
-
-func (t *IOS) SetHost(host string) *IOS {
-	t.host = host
-	return t
-}
-
-func (t *IOS) SetPort(port string) *IOS {
-	t.port = port
-	return t
-}
-
-func (t *IOS) SetPrivateKeyPath(privateKeyPath string) *IOS {
-	t.privateKeyPath = privateKeyPath
-	return t
-}
-
-func (t *IOS) SetOutput(output string) *IOS {
-	t.output = output
-	return t
-}
-
-func (t *IOS) ssh() *osx.SShX {
-	return osx.NewSSH().SetHost(t.host).SetPort(t.port).SetUsername(t.username).SetPassword(t.passwd).SetPrivateKeyPath(t.privateKeyPath)
-}
-
-func (t *IOS) SearchKeywords(keywords ...string) error {
+func (t *IOS) SearchByKeywords(keywords ...string) error {
 	sshClient, err := t.ssh().C()
 	if err != nil {
 		return err
