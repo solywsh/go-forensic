@@ -18,6 +18,11 @@ type IOS struct {
 	port           string
 	privateKeyPath string
 	output         string
+
+	sshClient  *osx.SShX
+	sftpClient *osx.SftpX
+	// TODO support more comparison methods
+	keywords []string
 }
 
 func NewIOS() *IOS {
@@ -62,10 +67,10 @@ func (t *IOS) SetOutput(output string) *IOS {
 }
 
 func (t *IOS) ssh() *osx.SShX {
-	return osx.NewSSH().SetHost(t.host).SetPort(t.port).SetUsername(t.username).SetPassword(t.passwd)
+	return osx.NewSSH().SetHost(t.host).SetPort(t.port).SetUsername(t.username).SetPassword(t.passwd).SetPrivateKeyPath(t.privateKeyPath)
 }
 
-func (t *IOS) SearchKeywords(keywords string) error {
+func (t *IOS) SearchKeywords(keywords ...string) error {
 	sshClient, err := t.ssh().C()
 	if err != nil {
 		return err
@@ -76,8 +81,11 @@ func (t *IOS) SearchKeywords(keywords string) error {
 		return nil
 	}
 	defer sftpClient.Close()
-	for _, s := range focusPathList {
-		err = t.handleFiles(keywords, s, sftpClient, sshClient)
+	t.sshClient = sshClient
+	t.sftpClient = sftpClient
+	t.keywords = keywords
+	for _, focusPath := range focusPathList {
+		err = t.handleFiles(focusPath)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -85,8 +93,8 @@ func (t *IOS) SearchKeywords(keywords string) error {
 	return nil
 }
 
-func (t *IOS) handleFiles(keywords, tryPath string, sftpClient *osx.SftpX, sshClient *osx.SShX) error {
-	tryFileList, err := sftpClient.ReadDir(tryPath)
+func (t *IOS) handleFiles(tryPath string) error {
+	tryFileList, err := t.sftpClient.ReadDir(tryPath)
 	if err != nil {
 		return err
 	}
@@ -94,78 +102,88 @@ func (t *IOS) handleFiles(keywords, tryPath string, sftpClient *osx.SftpX, sshCl
 		if !containerDir.IsDir() {
 			continue
 		}
-		err := func() error {
-			containerFileList, err := sftpClient.ReadDir(pathx.PathJoin(tryPath, containerDir.Name()))
-			if err != nil {
-				return err
-			}
-			var exist bool
-			for _, file := range containerFileList {
-				if file.IsDir() {
-					continue
-				}
-				if file.Name() == ContainerMetaDataFile {
-					exist = true
-				}
-			}
-			if !exist {
-				return nil
-			}
-			containerMetaDataFilePath := pathx.PathJoin(tryPath, containerDir.Name(), ContainerMetaDataFile)
-			file, err := sftpClient.Open(containerMetaDataFilePath)
-			defer file.Close()
-			if err != nil {
-				return err
-			}
-			content, err := io.ReadAll(file)
-			if err != nil {
-				return err
-			}
-			packageInfo := &struct {
-				PackageName string `plist:"MCMMetadataIdentifier"`
-			}{}
-			if _, err := plist.Unmarshal(content, packageInfo); err != nil {
-				return err
-			}
-			fmt.Println("find：", packageInfo.PackageName)
-			if !strings.Contains(strings.ToLower(packageInfo.PackageName), strings.ToLower(keywords)) {
-				return nil
-			}
-			fmt.Println("hit：", packageInfo.PackageName)
-			remoteDir := pathx.PathJoin(tryPath, containerDir.Name())
-			remoteTarPath := pathx.PathJoin(tryPath, ActiveFileName)
-			_, err = sshClient.ExecuteCommand(fmt.Sprintf("tar --ignore-failed-read -cf %s %s", remoteTarPath, remoteDir))
-			if err != nil {
-				return err
-			}
-			defer func() {
-				sshClient.DeleteFiles(remoteTarPath)
-			}()
-			localTarPath := filepath.Join(t.output, ActiveFileName)
-			err = sftpClient.DownloadFile(remoteTarPath, localTarPath)
-			if err != nil {
-				return err
-			}
-			defer func() {
-				os.RemoveAll(localTarPath)
-			}()
-			destinationDir := filepath.Join(t.output, tryPath, containerDir.Name())
-			if pathx.PathExists(destinationDir) {
-				os.RemoveAll(destinationDir)
-			}
-			err = os.MkdirAll(destinationDir, 0755)
-			if err != nil {
-				return err
-			}
-			err = osx.TarDecompression(localTarPath, t.output)
-			if err != nil {
-				return err
-			}
-			return nil
-		}()
+		err := t.handle(tryPath, containerDir)
 		if err != nil {
-			return err
+			fmt.Println(err)
 		}
 	}
 	return nil
+}
+
+func (t *IOS) handle(tryPath string, containerFile os.FileInfo) error {
+	containerFileList, err := t.sftpClient.ReadDir(pathx.PathJoin(tryPath, containerFile.Name()))
+	if err != nil {
+		return err
+	}
+	var exist bool
+	for _, file := range containerFileList {
+		if file.IsDir() {
+			continue
+		}
+		if file.Name() == ContainerMetaDataFile {
+			exist = true
+		}
+	}
+	if !exist {
+		return nil
+	}
+	containerMetaDataFilePath := pathx.PathJoin(tryPath, containerFile.Name(), ContainerMetaDataFile)
+	file, err := t.sftpClient.Open(containerMetaDataFilePath)
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	packageInfo := &struct {
+		PackageName string `plist:"MCMMetadataIdentifier"`
+	}{}
+	if _, err := plist.Unmarshal(content, packageInfo); err != nil {
+		return err
+	}
+	if !t.ComparisonKeywords(packageInfo.PackageName) {
+		return nil
+	}
+	fmt.Println("hit: ", packageInfo.PackageName)
+	remoteDir := pathx.PathJoin(tryPath, containerFile.Name())
+	remoteTarPath := pathx.PathJoin(tryPath, ActiveFileName)
+	_, err = t.sshClient.ExecuteCommand(fmt.Sprintf("tar --ignore-failed-read -cf %s %s", remoteTarPath, remoteDir))
+	if err != nil {
+		return err
+	}
+	defer func() {
+		t.sshClient.DeleteFiles(remoteTarPath)
+	}()
+	localTarPath := filepath.Join(t.output, ActiveFileName)
+	err = t.sftpClient.DownloadFile(remoteTarPath, localTarPath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		os.RemoveAll(localTarPath)
+	}()
+	destinationDir := filepath.Join(t.output, tryPath, containerFile.Name())
+	if pathx.PathExists(destinationDir) {
+		os.RemoveAll(destinationDir)
+	}
+	err = os.MkdirAll(destinationDir, 0755)
+	if err != nil {
+		return err
+	}
+	err = osx.TarDecompression(localTarPath, t.output)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *IOS) ComparisonKeywords(str string) bool {
+	for _, keyword := range t.keywords {
+		if strings.Contains(strings.ToLower(str), strings.ToLower(keyword)) {
+			return true
+		}
+	}
+	return false
 }
