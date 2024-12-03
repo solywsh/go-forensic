@@ -8,8 +8,8 @@ A forensic tool🔧 for mobile phone
 
 ### Base
 
-- [ ] log
-- [ ] output interface
+- [x] log
+- [ ] output interface（printer）
 - [ ] cmd
 
 ### iOS
