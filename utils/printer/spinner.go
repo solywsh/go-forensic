@@ -13,20 +13,51 @@ var (
 	defaultSpinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
 )
 
-type SpinnerX struct {
-	m  *SpinnerModel
-	p  *tea.Program
-	wg *sync.WaitGroup
-}
+type (
+	SpinnerX struct {
+		m  *SpinnerModel
+		p  *tea.Program
+		wg *sync.WaitGroup
+	}
 
-func NewSpinnerX() SpinnerX {
-	return SpinnerX{
-		m:  newSpinnerModel(),
+	SpinnerModel struct {
+		msg          string
+		textStyle    lipgloss.Style
+		spinnerStyle lipgloss.Style
+		spinner      spinner.Model
+	}
+
+	updateMessage struct {
+		text string
+	}
+	updateSpinner struct {
+		spinner spinner.Spinner
+	}
+	updateSpinnerStyle struct {
+		style lipgloss.Style
+	}
+	updateTextStyle struct {
+		style lipgloss.Style
+	}
+)
+
+func NewSpinnerX() *SpinnerX {
+	return &SpinnerX{
+		m:  initSpinnerModel(),
 		wg: &sync.WaitGroup{},
 	}
 }
 
-func (s SpinnerX) Run() {
+func initSpinnerModel() *SpinnerModel {
+	s := SpinnerModel{
+		spinner:   spinner.New(),
+		textStyle: defaultTextStyle,
+	}
+	s.spinner.Style = defaultSpinnerStyle
+	return &s
+}
+
+func (s *SpinnerX) Run() {
 	s.wg.Add(1)
 	go func() {
 		s.p = tea.NewProgram(s.m)
@@ -39,7 +70,7 @@ func (s SpinnerX) Run() {
 	}()
 }
 
-func (s SpinnerX) Msg(msg string) SpinnerX {
+func (s *SpinnerX) Msg(msg string) *SpinnerX {
 	s.m.msg = msg
 	s.wg.Wait()
 	if s.p != nil {
@@ -48,55 +79,44 @@ func (s SpinnerX) Msg(msg string) SpinnerX {
 	return s
 }
 
-func (s SpinnerX) Quit() {
+func (s *SpinnerX) Quit() {
 	s.wg.Wait()
 	if s.p != nil {
 		s.p.Quit()
 	}
 }
 
-type SpinnerModel struct {
-	msg          string
-	textStyle    lipgloss.Style
-	spinnerStyle lipgloss.Style
-	spinner      spinner.Model
-}
-
-type updateMessage struct {
-	text string
-}
-
-func newSpinnerModel() *SpinnerModel {
-	s := SpinnerModel{
-		spinner:   spinner.New(),
-		textStyle: defaultTextStyle,
-	}
-	s.spinner.Style = defaultSpinnerStyle
-	return &s
-}
-
-func (m *SpinnerModel) SetSpinner(spinner spinner.Spinner) *SpinnerModel {
-	if m == nil {
+func (s *SpinnerX) SetSpinner(spinner spinner.Spinner) *SpinnerX {
+	if s == nil {
 		return nil
 	}
-	m.spinner.Spinner = spinner
-	return m
+	s.wg.Wait()
+	if s.p != nil {
+		s.p.Send(updateSpinner{spinner: spinner})
+	}
+	return s
 }
 
-func (m *SpinnerModel) SetSpinnerStyle(style lipgloss.Style) *SpinnerModel {
-	if m == nil {
+func (s *SpinnerX) SetSpinnerStyle(style lipgloss.Style) *SpinnerX {
+	if s == nil {
 		return nil
 	}
-	m.spinner.Style = style
-	return m
+	s.wg.Wait()
+	if s.p != nil {
+		s.p.Send(updateSpinnerStyle{style: style})
+	}
+	return s
 }
 
-func (m *SpinnerModel) SetTextStyle(style lipgloss.Style) *SpinnerModel {
-	if m == nil {
+func (s *SpinnerX) SetTextStyle(style lipgloss.Style) *SpinnerX {
+	if s == nil {
 		return nil
 	}
-	m.textStyle = style
-	return m
+	s.wg.Wait()
+	if s.p != nil {
+		s.p.Send(updateTextStyle{style: style})
+	}
+	return s
 }
 
 func (m *SpinnerModel) Init() tea.Cmd {
@@ -116,6 +136,12 @@ func (m *SpinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	case updateMessage:
 		m.msg = msg.text
+	case updateSpinner:
+		m.spinner.Spinner = msg.spinner
+	case updateSpinnerStyle:
+		m.spinner.Style = msg.style
+	case updateTextStyle:
+		m.textStyle = msg.style
 	}
 	return m, nil
 }
