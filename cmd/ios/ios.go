@@ -19,16 +19,16 @@ var (
 	output   string
 )
 
-var RootCmd = &cobra.Command{
+var SystemIOSCmd = &cobra.Command{
 	Use:   "ios",
-	Short: "go-forensic processes commands related to the iOS system.",
+	Short: "go-forensic processes commands related to the iOS system",
 	Run: func(cmd *cobra.Command, args []string) {
 	},
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&sshAdd, "addr", "a", "root@127.0.0.1:22", "The username and address of the iOS device.")
-	RootCmd.PersistentFlags().StringVarP(&sshPass, "pass", "p", "alpine", "The password of the iOS device.")
+	SystemIOSCmd.PersistentFlags().StringVarP(&sshAdd, "addr", "a", "root@127.0.0.1:22", "the username and address of the iOS device")
+	SystemIOSCmd.PersistentFlags().StringVarP(&sshPass, "pass", "p", "alpine", "the password of the iOS device")
 }
 
 func parseSSHAddress(sshAddr string) (string, string, string, error) {
