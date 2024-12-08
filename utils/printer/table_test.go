@@ -113,7 +113,7 @@ func main() {
 		{"100", "Montreal", "Canada", "4,276,526"},
 	}
 
-	tb := NewTableModel(context.Background())
+	tb := NewTable(context.Background())
 	tb.SetRows(rows).SetColumns(columns)
 	tb.Run()
 	var selRows []table.Row

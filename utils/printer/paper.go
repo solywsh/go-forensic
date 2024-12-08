@@ -143,13 +143,6 @@ func (m paperModel) footerView() string {
 	}
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 func (p *PaperX) SetTitle(title string) *PaperX {
 	p.m.header = title
 	return p

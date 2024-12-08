@@ -1,15 +1,34 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"github.com/charmbracelet/bubbles/table"
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
+	"github.com/solywsh/go-forensic/utils/osx"
+	"github.com/solywsh/go-forensic/utils/printer"
 )
 
-type SqliteX struct {
-	dbPath   string
-	keywords []string
-}
+type (
+	SqliteX struct {
+		dbPath   string
+		keywords []string
+
+		tableMaxLength  int
+		columnMaxLength int
+		keyMaxLength    int
+		valueMaxLength  int // TODO show value
+	}
+	SearchResult struct {
+		Path     string
+		Table    string
+		Column   string
+		Keywords string
+		Key      string // other database
+		Value    string
+	}
+)
 
 func NewSqlite() *SqliteX {
 	return &SqliteX{}
@@ -35,6 +54,7 @@ func (t *SqliteX) SearchByKeywords(keywords ...string) error {
 	}
 	defer rows.Close()
 	var tableName string
+	var res []SearchResult
 	for rows.Next() {
 		if err := rows.Scan(&tableName); err != nil {
 			return err
@@ -63,12 +83,50 @@ func (t *SqliteX) SearchByKeywords(keywords ...string) error {
 				}
 				// If a record containing the keyword is found in this column, output the information.
 				if rowsInColumn.Next() {
-					log.Info("found keyword", "table", tableName, "column", columnName, "keyword", keyword)
+					if !osx.IsTTY() {
+						log.Info("found keyword", "table", tableName, "column", columnName, "keyword", keyword)
+					}
+					res = append(res, SearchResult{
+						Table:    tableName,
+						Column:   columnName,
+						Keywords: keyword,
+					})
+					t.tableMaxLength = max(t.tableMaxLength, len(tableName))
+					t.columnMaxLength = max(t.columnMaxLength, len(columnName))
+					t.keyMaxLength = max(t.keyMaxLength, len(keyword))
 				}
 				rowsInColumn.Close()
 			}
 		}
 		columnRows.Close()
 	}
+	err = t.showSearchResult(res)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *SqliteX) showSearchResult(res []SearchResult) error {
+	if len(res) == 0 {
+		log.Info("no search result")
+		return nil
+	}
+	if !osx.IsTTY() {
+		return nil
+	}
+	columns := []table.Column{
+		{Title: "Table", Width: min(50, t.tableMaxLength)},
+		{Title: "Column", Width: min(50, t.columnMaxLength)},
+		{Title: "Keywords", Width: min(50, t.keyMaxLength)},
+	}
+	rows := make([]table.Row, 0, len(res))
+	for _, r := range res {
+		rows = append(rows, table.Row{r.Table, r.Column, r.Keywords})
+	}
+	tb := printer.NewTable(context.Background())
+	tb.SetColumns(columns).SetRows(rows)
+	tb.Run()
+	tb.Wait()
 	return nil
 }
