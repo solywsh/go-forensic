@@ -9,7 +9,12 @@ A forensic tool🔧 for mobile phone
 ### Base
 
 - [x] log
-- [ ] output interface（printer）
+- [x] output interface（printer）
+  - [x] paper
+  - [x] spinner
+  - [x] table
+  - [x] text
+
 - [ ] cmd
 
 ### iOS

@@ -190,7 +190,7 @@ func (p *PaperX) SetInfoStyle(style lipgloss.Style) *PaperX {
 	return p
 }
 
-func NewPaperX(ctx context.Context) *PaperX {
+func NewPaper(ctx context.Context) *PaperX {
 	_ctx, cancel := context.WithCancel(ctx)
 	return &PaperX{m: &paperModel{
 		showProgress:               true,

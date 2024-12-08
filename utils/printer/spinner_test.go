@@ -7,7 +7,7 @@ import (
 
 func TestSpinnerX_Run(t *testing.T) {
 
-	s := NewSpinnerX().Msg("Loading...")
+	s := NewSpinner().Msg("Loading...")
 	s.Run()
 	time.Sleep(2 * time.Second)
 	s.Msg("Done")
@@ -19,7 +19,7 @@ func TestSpinnerX_Run(t *testing.T) {
 // tty in command
 
 func main() {
-	s := NewSpinnerX().Msg("Loading...")
+	s := NewSpinner().Msg("Loading...")
 	s.Run()
 	time.Sleep(2 * time.Second)
 	s.SetSpinner(spinner.Globe).Msg("Done")

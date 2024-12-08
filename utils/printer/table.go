@@ -65,7 +65,7 @@ func (m tableModel) View() string {
 	return m.tableBaseStyle.Render(m.table.View()) + "\n  " + m.table.HelpView() + "\n"
 }
 
-func NewTableModelX(ctx context.Context) *TableModelX {
+func NewTableModel(ctx context.Context) *TableModelX {
 	_ctx, cancel := context.WithCancel(ctx)
 	return &TableModelX{
 		m: &tableModel{

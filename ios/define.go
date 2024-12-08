@@ -32,6 +32,8 @@ type IOS struct {
 	sshClient  *osx.SShX
 	sftpClient *osx.SftpX
 	keywords   []string
+
+	cleanDirBefore bool
 }
 
 func NewIOS() *IOS {
@@ -42,6 +44,7 @@ func NewIOS() *IOS {
 		port:           "22",
 		privateKeyPath: "",
 		output:         "./temp",
+		cleanDirBefore: true,
 	}
 }
 

@@ -10,7 +10,7 @@ func main() {
 		fmt.Println("could not load file:", err)
 		os.Exit(1)
 	}
-	p := NewPaperX(context.Background()).SetTitle("artichoke.md").
+	p := NewPaper(context.Background()).SetTitle("artichoke.md").
 		SetContent(string(content)).
 		SetLoading("loading...").
 		EnableProgress(true)

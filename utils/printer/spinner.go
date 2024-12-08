@@ -41,7 +41,7 @@ type (
 	}
 )
 
-func NewSpinnerX() *SpinnerX {
+func NewSpinner() *SpinnerX {
 	return &SpinnerX{
 		m:       initSpinnerModel(),
 		startWg: &sync.WaitGroup{},
