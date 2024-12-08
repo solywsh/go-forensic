@@ -5,6 +5,9 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
+	"github.com/solywsh/go-forensic/utils/osx"
+	"os"
 	"sync"
 )
 
@@ -58,19 +61,26 @@ func initSpinnerModel() *spinnerModel {
 }
 
 func (s *SpinnerX) Run() {
+	if !osx.IsTTY() {
+		return
+	}
 	s.startWg.Add(1)
 	go func() {
 		s.p = tea.NewProgram(s.m)
 		s.startWg.Done()
 		_, err := s.p.Run()
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 			return
 		}
 	}()
 }
 
 func (s *SpinnerX) Msg(msg string) *SpinnerX {
+	if !osx.IsTTY() {
+		log.Info(msg)
+		return s
+	}
 	s.m.msg = msg
 	s.startWg.Wait()
 	if s.p != nil {
@@ -80,6 +90,9 @@ func (s *SpinnerX) Msg(msg string) *SpinnerX {
 }
 
 func (s *SpinnerX) Quit() {
+	if !osx.IsTTY() {
+		return
+	}
 	s.startWg.Wait()
 	if s.p != nil {
 		s.p.Quit()
@@ -87,6 +100,9 @@ func (s *SpinnerX) Quit() {
 }
 
 func (s *SpinnerX) SetSpinner(spinner spinner.Spinner) *SpinnerX {
+	if !osx.IsTTY() {
+		return s
+	}
 	if s == nil {
 		return nil
 	}
@@ -98,6 +114,9 @@ func (s *SpinnerX) SetSpinner(spinner spinner.Spinner) *SpinnerX {
 }
 
 func (s *SpinnerX) SetSpinnerStyle(style lipgloss.Style) *SpinnerX {
+	if !osx.IsTTY() {
+		return s
+	}
 	if s == nil {
 		return nil
 	}
@@ -109,6 +128,9 @@ func (s *SpinnerX) SetSpinnerStyle(style lipgloss.Style) *SpinnerX {
 }
 
 func (s *SpinnerX) SetTextStyle(style lipgloss.Style) *SpinnerX {
+	if !osx.IsTTY() {
+		return s
+	}
 	if s == nil {
 		return nil
 	}
@@ -128,6 +150,7 @@ func (m *spinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
+			os.Exit(0)
 			return m, tea.Quit
 		}
 	case spinner.TickMsg:

@@ -6,7 +6,6 @@ import (
 )
 
 func TestSpinnerX_Run(t *testing.T) {
-
 	s := NewSpinner().Msg("Loading...")
 	s.Run()
 	time.Sleep(2 * time.Second)

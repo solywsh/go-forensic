@@ -3,6 +3,7 @@ package ios
 import (
 	"github.com/solywsh/go-forensic/utils/logger"
 	"github.com/solywsh/go-forensic/utils/osx"
+	"github.com/solywsh/go-forensic/utils/printer"
 )
 
 const (
@@ -34,6 +35,7 @@ type IOS struct {
 	keywords   []string
 
 	cleanDirBefore bool
+	spinner        *printer.SpinnerX
 }
 
 func NewIOS() *IOS {
