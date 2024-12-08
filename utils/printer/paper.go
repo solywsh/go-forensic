@@ -13,11 +13,11 @@ import (
 
 type (
 	PaperX struct {
-		m       *PaperModel
+		m       *paperModel
 		p       *tea.Program
 		startWg *sync.WaitGroup
 	}
-	PaperModel struct {
+	paperModel struct {
 		content      string
 		header       string
 		loading      string
@@ -54,14 +54,14 @@ var (
 	}()
 )
 
-func (m PaperModel) Init() tea.Cmd {
+func (m paperModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m PaperModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m paperModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
+		cmd     tea.Cmd
+		cmdList []tea.Cmd
 	)
 
 	switch msg := msg.(type) {
@@ -100,18 +100,18 @@ func (m PaperModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// initialize the viewport and when the window is resized.
 			//
 			// This is needed for high-performance rendering only.
-			cmds = append(cmds, viewport.Sync(m.viewport))
+			cmdList = append(cmdList, viewport.Sync(m.viewport))
 		}
 	}
 
 	// Handle keyboard and mouse events in the viewport
 	m.viewport, cmd = m.viewport.Update(msg)
-	cmds = append(cmds, cmd)
+	cmdList = append(cmdList, cmd)
 
-	return m, tea.Batch(cmds...)
+	return m, tea.Batch(cmdList...)
 }
 
-func (m PaperModel) View() string {
+func (m paperModel) View() string {
 	if !m.ready {
 		if m.loading != "" {
 			return "\n " + m.loading
@@ -123,7 +123,7 @@ func (m PaperModel) View() string {
 
 }
 
-func (m PaperModel) headerView() string {
+func (m paperModel) headerView() string {
 	if m.header != "" {
 		title := m.titleStyle.Render(m.header)
 		line := strings.Repeat(m.border, max(0, m.viewport.Width-lipgloss.Width(title)))
@@ -133,7 +133,7 @@ func (m PaperModel) headerView() string {
 	}
 }
 
-func (m PaperModel) footerView() string {
+func (m paperModel) footerView() string {
 	if m.showProgress {
 		info := m.infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 		line := strings.Repeat(m.border, max(0, m.viewport.Width-lipgloss.Width(info)))
@@ -192,7 +192,7 @@ func (p *PaperX) SetInfoStyle(style lipgloss.Style) *PaperX {
 
 func NewPaperX(ctx context.Context) *PaperX {
 	_ctx, cancel := context.WithCancel(ctx)
-	return &PaperX{m: &PaperModel{
+	return &PaperX{m: &paperModel{
 		showProgress:               true,
 		border:                     "-",
 		loading:                    "load content...",
@@ -213,7 +213,7 @@ func (p *PaperX) Run() {
 		p.p = tea.NewProgram(
 			p.m,
 			tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
-			tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
+			tea.WithMouseCellMotion(), // turn on mouse support, so we can track the mouse wheel
 		)
 		p.startWg.Done()
 		_, err := p.p.Run()
