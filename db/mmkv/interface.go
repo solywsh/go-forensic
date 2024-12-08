@@ -8,5 +8,11 @@ type MMKV interface {
 }
 
 func FactoryNewMMKV(dir string) MMKV {
+	// Due to some confidentiality reasons,
+	// I cannot publicly disclose the specific parsing logic of my existing MMKV
+	// until alternative methods are found.
+	// If you have a corresponding solution,
+	// please implement the MMKV interface and submit it to me,
+	// and I will merge it.
 	return NewMMKV(dir)
 }
