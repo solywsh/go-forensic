@@ -9,6 +9,7 @@ import (
 var (
 	dbFilePath string
 	keywords   []string
+	ignoreErr  bool
 )
 
 var (
@@ -22,7 +23,10 @@ var (
 		Use:   "search",
 		Short: "search for information on keywords in the SQLite database",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := db.NewSqlite().SetDbPath(dbFilePath).SearchByKeywords(keywords...)
+			err := db.NewSqlite().
+				SetDbPath(dbFilePath).
+				SetIgnoreErr(ignoreErr).
+				SearchByKeywords(keywords...)
 			if err != nil {
 				log.Error(err)
 				return
@@ -34,5 +38,6 @@ var (
 func init() {
 	SqliteCmd.PersistentFlags().StringVarP(&dbFilePath, "file", "f", "", "the path to the SQLite database file")
 	SqliteSearchCmd.Flags().StringSliceVarP(&keywords, "keywords", "k", nil, "the keyword to search for in the SQLite database")
+	SqliteSearchCmd.Flags().BoolVarP(&ignoreErr, "ignore-err", "", false, "ignore errors info when searching")
 	SqliteCmd.AddCommand(SqliteSearchCmd)
 }

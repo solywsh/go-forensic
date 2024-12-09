@@ -44,6 +44,22 @@ func (t *IOS) ExportAppDataByKeywords(keywords ...string) error {
 		}
 	}
 	return nil
+
+}
+
+func removeAll(path string) error {
+	return filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("walk error: %w", err)
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if removeErr := os.Remove(p); removeErr != nil {
+			return fmt.Errorf("remove file error: %w", removeErr)
+		}
+		return nil
+	})
 }
 
 func (t *IOS) handleFiles(tryPath string) error {
@@ -51,7 +67,7 @@ func (t *IOS) handleFiles(tryPath string) error {
 		destinationDir := filepath.Join(t.output, tryPath)
 		if pathx.PathExists(destinationDir) {
 			t.spinner.Msg(fmt.Sprintf("cleaning %s", destinationDir))
-			os.RemoveAll(destinationDir)
+			removeAll(destinationDir)
 		}
 	}
 	tryFileList, err := t.sftpClient.ReadDir(tryPath)

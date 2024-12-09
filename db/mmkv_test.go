@@ -1,8 +1,6 @@
 package db
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestNewMMKV(t *testing.T) {
 	m := NewMMKV(`../testing/db/mmkv`)

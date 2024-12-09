@@ -19,6 +19,7 @@ type (
 		columnMaxLength int
 		keyMaxLength    int
 		valueMaxLength  int // TODO show value
+		ignoreErr       bool
 	}
 	SearchResult struct {
 		Path     string
@@ -31,12 +32,30 @@ type (
 )
 
 func NewSqlite() *SqliteX {
-	return &SqliteX{}
+	return &SqliteX{
+		tableMaxLength:  6,
+		columnMaxLength: 6,
+		keyMaxLength:    6,
+		valueMaxLength:  6,
+		ignoreErr:       false,
+	}
 }
 
 func (t *SqliteX) SetDbPath(dbPath string) *SqliteX {
 	t.dbPath = dbPath
 	return t
+}
+
+func (t *SqliteX) SetIgnoreErr(ignoreErr bool) *SqliteX {
+	t.ignoreErr = ignoreErr
+	return t
+}
+
+func (t *SqliteX) Error(msg interface{}, keyvals ...interface{}) {
+	if t.ignoreErr {
+		return
+	}
+	log.Error(msg, keyvals...)
 }
 
 func (t *SqliteX) SearchByKeywords(keywords ...string) error {
@@ -57,12 +76,13 @@ func (t *SqliteX) SearchByKeywords(keywords ...string) error {
 	var res []SearchResult
 	for rows.Next() {
 		if err := rows.Scan(&tableName); err != nil {
-			return err
+			t.Error("failed to scan table name", "error", err)
+			continue
 		}
 		// get column information for each table
 		columnRows, err := db.Query(fmt.Sprintf("PRAGMA table_info(\"%s\");", tableName))
 		if err != nil {
-			log.Error("failed to get column information", "table", tableName, "error", err)
+			t.Error("failed to get column information", "table", tableName, "error", err)
 			continue
 		}
 		var columnName string
@@ -72,14 +92,16 @@ func (t *SqliteX) SearchByKeywords(keywords ...string) error {
 			var defaultValue sql.NullString
 			// scan column information
 			if err := columnRows.Scan(&cid, &columnName, &cType, &notnull, &defaultValue, &pk); err != nil {
-				return err
+				t.Error("failed to scan column information", "table", tableName, "error", err)
+				continue
 			}
 			// search for keywords in each column
 			query := fmt.Sprintf("SELECT * FROM %s WHERE %s LIKE ?;", tableName, columnName)
 			for _, keyword := range keywords {
 				rowsInColumn, err := db.Query(query, "%"+keyword+"%")
 				if err != nil {
-					return fmt.Errorf("failed to query column %s of table %s: %v", tableName, columnName, err)
+					t.Error("failed to query column %s of table %s: %v", tableName, columnName, err)
+					continue
 				}
 				// If a record containing the keyword is found in this column, output the information.
 				if rowsInColumn.Next() {
