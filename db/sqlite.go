@@ -138,9 +138,9 @@ func (t *SqliteX) showSearchResult(res []SearchResult) error {
 		return nil
 	}
 	columns := []table.Column{
-		{Title: "Table", Width: min(50, t.tableMaxLength)},
-		{Title: "Column", Width: min(50, t.columnMaxLength)},
-		{Title: "Keywords", Width: min(50, t.keyMaxLength)},
+		{Title: "Table", Width: min(50, max(t.tableMaxLength, len("Table")))},
+		{Title: "Column", Width: min(50, max(t.columnMaxLength, len("Column")))},
+		{Title: "Keywords", Width: min(50, max(t.keyMaxLength, len("Keywords")))},
 	}
 	rows := make([]table.Row, 0, len(res))
 	for _, r := range res {
