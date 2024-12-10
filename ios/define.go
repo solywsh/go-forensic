@@ -80,6 +80,11 @@ func (t *IOS) SetOutput(output string) *IOS {
 	return t
 }
 
+func (t *IOS) SetCleanDirBefore(cleanDirBefore bool) *IOS {
+	t.cleanDirBefore = cleanDirBefore
+	return t
+}
+
 func (t *IOS) ssh() *osx.SShX {
 	return osx.NewSSH().SetHost(t.host).SetPort(t.port).SetUsername(t.username).SetPassword(t.passwd).SetPrivateKeyPath(t.privateKeyPath)
 }

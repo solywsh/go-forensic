@@ -13,10 +13,11 @@ var (
 )
 
 var (
-	sshAdd   string
-	sshPass  string
-	keywords []string
-	output   string
+	sshAdd       string
+	sshPass      string
+	keywords     []string
+	specifyPaths []string
+	output       string
 )
 
 var SystemIOSCmd = &cobra.Command{
