@@ -3,6 +3,7 @@ package pathx
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func PathJoin(arg ...string) string {
@@ -15,4 +16,21 @@ func PathExists(path string) bool {
 		return false
 	}
 	return true
+}
+
+func FilterSubDir(paths []string) []string {
+	var result []string
+	for i, path := range paths {
+		isSubdirectory := false
+		for j, otherPath := range paths {
+			if i != j && strings.HasPrefix(path, otherPath) && len(path) > len(otherPath) {
+				isSubdirectory = true
+				break
+			}
+		}
+		if !isSubdirectory {
+			result = append(result, path)
+		}
+	}
+	return result
 }

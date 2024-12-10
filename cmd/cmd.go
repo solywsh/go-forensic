@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/solywsh/go-forensic/cmd/android"
 	"github.com/solywsh/go-forensic/cmd/db"
 	"github.com/solywsh/go-forensic/cmd/ios"
 	"github.com/solywsh/go-forensic/utils/printer"
@@ -19,8 +20,9 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(ios.SystemIOSCmd)
 	rootCmd.AddCommand(db.SqliteCmd)
+	rootCmd.AddCommand(ios.SystemIOSCmd)
+	rootCmd.AddCommand(android.SystemAndroidCmd)
 }
 
 func Execute() {

@@ -2,6 +2,7 @@ package ios
 
 import (
 	"github.com/solywsh/go-forensic/ios"
+	"github.com/solywsh/go-forensic/utils/osx"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +11,7 @@ var (
 		Use:   "export",
 		Short: "to export data from applications in the iOS system",
 		Run: func(cmd *cobra.Command, args []string) {
-			username, host, port, err := parseSSHAddress(sshAdd)
+			username, host, port, err := osx.ParseSSHAddress(sshAdd)
 			if err != nil {
 				log.Error(err)
 				return

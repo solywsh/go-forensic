@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"net"
 	"os"
+	"strings"
 )
 
 type (
@@ -144,4 +146,21 @@ func (s *SShX) DeleteFiles(path string) error {
 		return fmt.Errorf("failed to delete remote file: %v", err)
 	}
 	return nil
+}
+
+func ParseSSHAddress(sshAddr string) (string, string, string, error) {
+	parts := strings.Split(sshAddr, "@")
+	if len(parts) != 2 {
+		return "", "", "", fmt.Errorf("invalid SSH address format")
+	}
+
+	username := parts[0]
+	address := parts[1]
+
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return "", "", "", fmt.Errorf("failed to parse address: %w", err)
+	}
+
+	return username, host, port, nil
 }
