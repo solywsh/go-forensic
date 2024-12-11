@@ -22,12 +22,10 @@ func (t *IOS) init() error {
 	if err != nil {
 		return err
 	}
-	defer sshClient.Close()
 	sftpClient := sshClient.SFTP()
 	if sftpClient == nil {
 		return nil
 	}
-	defer sftpClient.Close()
 	t.sshClient = sshClient
 	t.sftpClient = sftpClient
 	return nil
@@ -41,6 +39,8 @@ func (t *IOS) ExportAppDataByKeywords(keywords ...string) error {
 	if err != nil {
 		return err
 	}
+	defer t.sshClient.Close()
+	defer t.sftpClient.Close()
 	defer t.spinner.Quit()
 	defer t.spinner.Msg("export by keywords is done.")
 	t.keywords = keywords
@@ -143,6 +143,8 @@ func (t *IOS) ExportBySpecify(pathList ...string) error {
 	if err != nil {
 		return err
 	}
+	defer t.sshClient.Close()
+	defer t.sftpClient.Close()
 	defer t.spinner.Quit()
 	defer t.spinner.Msg("export by specify path is done.")
 	for _, _path := range pathList {

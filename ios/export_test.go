@@ -3,9 +3,9 @@ package ios
 import "testing"
 
 func TestIOS_ExportAppDataByKeywords(t *testing.T) {
-	err := NewIOS().SetPort("2222").
+	err := NewIOS().SetPort("22").
 		SetOutput("../temp").
-		ExportAppDataByKeywords("whatsapp")
+		ExportAppDataByKeywords("facebook")
 	if err != nil {
 		t.Error(err)
 		return
