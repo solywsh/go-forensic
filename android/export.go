@@ -19,6 +19,8 @@ func (t *Android) ExportByKeywords(keywords ...string) error {
 	t.spinner = printer.NewSpinner()
 	t.spinner.SetSpinner(spinner.Moon).Msg("loading...")
 	t.spinner.Run()
+	defer t.spinner.Msg("export by keywords is done.")
+	defer t.spinner.Quit()
 	adbClient, err := gadb.NewClient()
 	if err != nil {
 		return err
