@@ -28,7 +28,7 @@ func NewSSH() *SShX {
 		host:           "127.0.0.1",
 		port:           "22",
 		username:       "root",
-		password:       "alpine",
+		password:       "",
 		privateKeyPath: "~/.ssh/id_rsa",
 	}
 }
