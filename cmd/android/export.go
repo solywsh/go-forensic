@@ -10,11 +10,20 @@ var (
 		Use:   "export",
 		Short: "to export data from applications in the Android system",
 		Run: func(cmd *cobra.Command, args []string) {
-			ad := android.NewAndroid()
-			err := ad.SetOutput(output).ExportByKeywords(keywords...)
-			if err != nil {
-				log.Error(err)
-				return
+			ad := android.NewAndroid().SetOutput(output)
+			if len(specifyPaths) > 0 {
+				err := ad.ExportBySpecify(specifyPaths...)
+				if err != nil {
+					log.Error(err)
+					return
+				}
+			}
+			if len(keywords) > 0 {
+				err := ad.ExportAppDataByKeywords(keywords...)
+				if err != nil {
+					log.Error(err)
+					return
+				}
 			}
 		},
 	}
@@ -23,5 +32,6 @@ var (
 func init() {
 	exportCmd.Flags().StringVarP(&output, "output", "o", "temp", "the output directory for the exported data")
 	exportCmd.Flags().StringSliceVarP(&keywords, "keyword", "k", nil, "the keyword to search for in the application data")
+	exportCmd.Flags().StringSliceVarP(&specifyPaths, "specify-path", "s", nil, "the path to the data to be exported")
 	SystemAndroidCmd.AddCommand(exportCmd)
 }
