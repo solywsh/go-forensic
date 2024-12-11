@@ -1,8 +1,11 @@
 package android
 
 import (
+	"bytes"
+	"github.com/electricbubble/gadb"
 	"github.com/solywsh/go-forensic/utils/logger"
 	"github.com/solywsh/go-forensic/utils/printer"
+	"os"
 )
 
 var (
@@ -29,6 +32,7 @@ type Android struct {
 	cleanDirBefore bool
 	spinner        *printer.SpinnerX
 	keywords       []string
+	device         gadb.Device
 }
 
 func NewAndroid() *Android {
@@ -46,4 +50,17 @@ func (t *Android) SetOutput(output string) *Android {
 func (t *Android) SetCleanDirBefore(cleanDirBefore bool) *Android {
 	t.cleanDirBefore = cleanDirBefore
 	return t
+}
+
+func (t *Android) AdbRunShellCommand(args ...string) (string, error) {
+	return t.device.RunShellCommand("su", append([]string{"-c"}, args...)...)
+}
+
+func (t *Android) AdbPullFile(remotePath, localPath string) error {
+	buffer := bytes.NewBuffer(nil)
+	err := t.device.Pull(remotePath, buffer)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(localPath, buffer.Bytes(), os.ModePerm)
 }

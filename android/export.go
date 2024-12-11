@@ -3,6 +3,7 @@ package android
 import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/electricbubble/gadb"
 	"github.com/solywsh/go-forensic/utils/osx"
 	"github.com/solywsh/go-forensic/utils/pathx"
 	"github.com/solywsh/go-forensic/utils/printer"
@@ -18,6 +19,18 @@ func (t *Android) ExportByKeywords(keywords ...string) error {
 	t.spinner = printer.NewSpinner()
 	t.spinner.SetSpinner(spinner.Moon).Msg("loading...")
 	t.spinner.Run()
+	adbClient, err := gadb.NewClient()
+	if err != nil {
+		return err
+	}
+	devices, err := adbClient.DeviceList()
+	if err != nil {
+		return err
+	}
+	if len(devices) == 0 {
+		return fmt.Errorf("list of devices is empty")
+	}
+	t.device = devices[0]
 	if !pathx.PathExists(t.output) {
 		os.MkdirAll(t.output, os.ModePerm)
 	}
@@ -49,19 +62,20 @@ func (t *Android) exportWithAdb(remoteFilePath string) error {
 	t.spinner.Msg(fmt.Sprintf("handling %s", remoteFilePath))
 	tarFileName := filepath.Base(remoteFilePath) + ".tar"
 	tarFileRemotePath := pathx.PathJoin("/sdcard/", tarFileName)
+	localTarFilePath := filepath.Join(t.output, tarFileName)
+
 	t.spinner.Msg(fmt.Sprintf("packing %s --> %s", remoteFilePath, tarFileRemotePath))
-	if _, err := osx.RunADBShellCommand("tar", "-cf", tarFileRemotePath, remoteFilePath); err != nil {
+	if _, err := t.AdbRunShellCommand("tar", "-cf", tarFileRemotePath, remoteFilePath); err != nil {
 		return fmt.Errorf("failed to create tar for %s: %s\n", remoteFilePath, err)
 	}
-	t.spinner.Msg(fmt.Sprintf("pulling %s --> %s", tarFileRemotePath, t.output))
-	if _, err := osx.RunADBCommand("pull", tarFileRemotePath, t.output); err != nil {
+	t.spinner.Msg(fmt.Sprintf("pulling %s --> %s", tarFileRemotePath, localTarFilePath))
+	if err := t.AdbPullFile(tarFileRemotePath, localTarFilePath); err != nil {
 		return fmt.Errorf("failed to pull tar file: %s\n", err)
 	}
 	t.spinner.Msg(fmt.Sprintf("removing %s", tarFileRemotePath))
-	if _, err := osx.RunADBShellCommand("rm", tarFileRemotePath); err != nil {
+	if _, err := t.AdbRunShellCommand("rm", tarFileRemotePath); err != nil {
 		return fmt.Errorf("failed to remove %s: %s\n", tarFileRemotePath, err)
 	}
-	localTarFilePath := filepath.Join(t.output, tarFileName)
 	t.spinner.Msg(fmt.Sprintf("extracting %s", localTarFilePath))
 	if err := osx.TarDecompression(localTarFilePath, t.output); err != nil {
 		return err
@@ -75,7 +89,7 @@ func (t *Android) checkForMatchingSubDirs(dir string, layer int) ([]string, erro
 	if layer == 0 {
 		return res, nil // max layer reached, no more recursion
 	}
-	output, err := osx.RunADBShellCommand("ls", dir)
+	output, err := t.AdbRunShellCommand("ls", dir)
 	if err != nil {
 		return res, fmt.Errorf("failed to list directory %s: %s\n", dir, err)
 	}
@@ -99,7 +113,7 @@ func (t *Android) checkForMatchingSubDirs(dir string, layer int) ([]string, erro
 		// recursively check sub directories
 		resChild, err := t.checkForMatchingSubDirs(fullPath, layer-1)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 			continue
 		}
 		res = append(res, resChild...)

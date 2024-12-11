@@ -7,6 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.2.4
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/log v0.4.0
+	github.com/electricbubble/gadb v0.1.0
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/pkg/sftp v1.13.7
 	github.com/spf13/cobra v1.8.1
