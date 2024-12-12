@@ -3,7 +3,9 @@ package ios
 import (
 	"github.com/solywsh/go-forensic/ios"
 	"github.com/solywsh/go-forensic/utils/osx"
+	"github.com/solywsh/go-forensic/utils/printer"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 var (
@@ -16,6 +18,12 @@ var (
 				log.Error(err)
 				return
 			}
+			defer func() {
+				p := printer.NewSpinner()
+				p.Msg("done.").Run()
+				time.Sleep(1 * time.Second)
+				p.Quit()
+			}()
 			iosHelper := ios.NewIOS().
 				SetHost(host).
 				SetPort(port).

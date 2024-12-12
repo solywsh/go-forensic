@@ -106,6 +106,7 @@ func (s *SpinnerX) SetSpinner(spinner spinner.Spinner) *SpinnerX {
 	if s == nil {
 		return nil
 	}
+	s.m.spinner.Spinner = spinner
 	s.startWg.Wait()
 	if s.p != nil {
 		s.p.Send(updateSpinner{spinner: spinner})
@@ -120,6 +121,7 @@ func (s *SpinnerX) SetSpinnerStyle(style lipgloss.Style) *SpinnerX {
 	if s == nil {
 		return nil
 	}
+	s.m.spinnerStyle = style
 	s.startWg.Wait()
 	if s.p != nil {
 		s.p.Send(updateSpinnerStyle{style: style})
@@ -134,6 +136,7 @@ func (s *SpinnerX) SetTextStyle(style lipgloss.Style) *SpinnerX {
 	if s == nil {
 		return nil
 	}
+	s.m.textStyle = style
 	s.startWg.Wait()
 	if s.p != nil {
 		s.p.Send(updateTextStyle{style: style})

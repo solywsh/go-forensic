@@ -1,8 +1,11 @@
 package android
 
 import (
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/solywsh/go-forensic/android"
+	"github.com/solywsh/go-forensic/utils/printer"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 var (
@@ -11,6 +14,12 @@ var (
 		Short: "to export data from applications in the Android system",
 		Run: func(cmd *cobra.Command, args []string) {
 			ad := android.NewAndroid().SetOutput(output)
+			defer func() {
+				p := printer.NewSpinner().SetSpinner(spinner.Moon)
+				p.Msg("done.").Run()
+				time.Sleep(1 * time.Second)
+				p.Quit()
+			}()
 			if len(specifyPaths) > 0 {
 				err := ad.ExportBySpecify(specifyPaths...)
 				if err != nil {
