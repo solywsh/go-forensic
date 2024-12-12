@@ -46,7 +46,7 @@ func (t *IOS) ExportAppDataByKeywords(keywords ...string) error {
 	t.keywords = keywords
 	for _, focusPath := range focusPathList {
 		t.spinner.Msg(fmt.Sprintf("searching %s", focusPath))
-		err := t.handleFiles(focusPath)
+		err := t.handleFocusPath(focusPath)
 		if err != nil {
 			log.Error(err)
 		}
@@ -54,7 +54,7 @@ func (t *IOS) ExportAppDataByKeywords(keywords ...string) error {
 	return nil
 }
 
-func (t *IOS) handleFiles(tryPath string) error {
+func (t *IOS) handleFocusPath(tryPath string) error {
 	if t.cleanDirBefore {
 		destinationDir := filepath.Join(t.output, tryPath)
 		if pathx.PathExists(destinationDir) {
@@ -148,6 +148,11 @@ func (t *IOS) ExportBySpecify(pathList ...string) error {
 	defer t.spinner.Quit()
 	defer t.spinner.Msg("export by specify path is done.")
 	for _, _path := range pathList {
+		destinationDir := filepath.Join(t.output, filepath.Dir(_path))
+		t.spinner.Msg(fmt.Sprintf("decompressing %s", destinationDir))
+		if pathx.PathExists(destinationDir) {
+			os.RemoveAll(destinationDir)
+		}
 		err := t.export(_path)
 		if err != nil {
 			log.Error(err)
@@ -176,11 +181,12 @@ func (t *IOS) export(remotePath string) error {
 	defer func() {
 		os.RemoveAll(localTarPath)
 	}()
-	destinationDir := filepath.Join(t.output, filepath.Dir(remotePath))
-	t.spinner.Msg(fmt.Sprintf("decompressing %s", destinationDir))
-	if pathx.PathExists(destinationDir) {
-		os.RemoveAll(destinationDir)
+	t.spinner.Msg(fmt.Sprintf("decompressing %s", remotePath))
+	_, err = t.sshClient.ExecuteCommand(fmt.Sprintf("rm -f %s", remoteTarPath))
+	if err != nil {
+		return err
 	}
+	destinationDir := filepath.Join(t.output, filepath.Dir(remotePath))
 	err = os.MkdirAll(destinationDir, 0755)
 	if err != nil {
 		return err

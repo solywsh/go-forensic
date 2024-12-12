@@ -5,7 +5,7 @@ import "testing"
 func TestIOS_ExportAppDataByKeywords(t *testing.T) {
 	err := NewIOS().SetPort("22").
 		SetOutput("../temp").
-		ExportAppDataByKeywords("facebook")
+		ExportAppDataByKeywords("passbook", "passes")
 	if err != nil {
 		t.Error(err)
 		return
