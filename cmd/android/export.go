@@ -15,6 +15,9 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			ad := android.NewAndroid().SetOutput(output)
 			defer func() {
+				if len(specifyPaths) == 0 && len(keywords) == 0 {
+					return
+				}
 				p := printer.NewSpinner().SetSpinner(spinner.Moon)
 				p.Msg("done.").Run()
 				time.Sleep(1 * time.Second)

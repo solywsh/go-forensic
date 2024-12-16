@@ -1,6 +1,9 @@
 package utils
 
-import "strings"
+import (
+	"golang.org/x/exp/constraints"
+	"strings"
+)
 
 func Contain[T comparable](s T, arr []T) bool {
 	for _, v := range arr {
@@ -18,4 +21,18 @@ func ContainString(s string, arr []string) bool {
 		}
 	}
 	return false
+}
+
+func Max[T constraints.Ordered](a, b T) T {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func Min[T constraints.Ordered](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
 }

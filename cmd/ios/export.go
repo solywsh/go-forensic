@@ -19,6 +19,9 @@ var (
 				return
 			}
 			defer func() {
+				if len(specifyPaths) == 0 && len(keywords) == 0 {
+					return
+				}
 				p := printer.NewSpinner()
 				p.Msg("done.").Run()
 				time.Sleep(1 * time.Second)
