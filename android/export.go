@@ -33,14 +33,15 @@ func (t *Android) ExportAppDataByKeywords(keywords ...string) error {
 		return fmt.Errorf("list of devices is empty")
 	}
 	t.device = devices[0]
-	if !pathx.PathExists(t.output) {
-		os.MkdirAll(t.output, os.ModePerm)
-	}
 	absOutput, err := filepath.Abs(t.output)
 	if err != nil {
 		return err
 	}
 	t.output = absOutput
+	t.removeOutput()
+	if !pathx.PathExists(t.output) {
+		os.MkdirAll(t.output, os.ModePerm)
+	}
 	t.keywords = keywords
 	for focusPath, layer := range androidFocusMap {
 		t.spinner.Msg(fmt.Sprintf("searching %s", focusPath))
@@ -55,6 +56,45 @@ func (t *Android) ExportAppDataByKeywords(keywords ...string) error {
 			if err != nil {
 				log.Error(err)
 			}
+		}
+	}
+	return nil
+}
+
+func (t *Android) ExportBySpecify(pathList ...string) error {
+	if len(pathList) == 0 {
+		return fmt.Errorf("please input path")
+	}
+	t.spinner = printer.NewSpinner()
+	t.spinner.SetSpinner(spinner.Moon).Msg("loading...")
+	t.spinner.Run()
+	defer t.spinner.Msg("export by specify is done.")
+	defer t.spinner.Quit()
+	adbClient, err := gadb.NewClient()
+	if err != nil {
+		return err
+	}
+	devices, err := adbClient.DeviceList()
+	if err != nil {
+		return err
+	}
+	if len(devices) == 0 {
+		return fmt.Errorf("list of devices is empty")
+	}
+	t.device = devices[0]
+	absOutput, err := filepath.Abs(t.output)
+	if err != nil {
+		return err
+	}
+	t.output = absOutput
+	t.removeOutput()
+	if !pathx.PathExists(t.output) {
+		os.MkdirAll(t.output, os.ModePerm)
+	}
+	for _, _path := range pathList {
+		err := t.exportWithAdb(_path)
+		if err != nil {
+			log.Error(err)
 		}
 	}
 	return nil
@@ -121,42 +161,4 @@ func (t *Android) checkForMatchingSubDirs(dir string, layer int) ([]string, erro
 		res = append(res, resChild...)
 	}
 	return res, nil
-}
-
-func (t *Android) ExportBySpecify(pathList ...string) error {
-	if len(pathList) == 0 {
-		return fmt.Errorf("please input path")
-	}
-	t.spinner = printer.NewSpinner()
-	t.spinner.SetSpinner(spinner.Moon).Msg("loading...")
-	t.spinner.Run()
-	defer t.spinner.Msg("export by specify is done.")
-	defer t.spinner.Quit()
-	adbClient, err := gadb.NewClient()
-	if err != nil {
-		return err
-	}
-	devices, err := adbClient.DeviceList()
-	if err != nil {
-		return err
-	}
-	if len(devices) == 0 {
-		return fmt.Errorf("list of devices is empty")
-	}
-	t.device = devices[0]
-	if !pathx.PathExists(t.output) {
-		os.MkdirAll(t.output, os.ModePerm)
-	}
-	absOutput, err := filepath.Abs(t.output)
-	if err != nil {
-		return err
-	}
-	t.output = absOutput
-	for _, _path := range pathList {
-		err := t.exportWithAdb(_path)
-		if err != nil {
-			log.Error(err)
-		}
-	}
-	return nil
 }

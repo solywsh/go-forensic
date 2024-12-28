@@ -28,6 +28,7 @@ func (t *IOS) init() error {
 	}
 	t.sshClient = sshClient
 	t.sftpClient = sftpClient
+	t.removeOutput()
 	return nil
 }
 
@@ -55,14 +56,14 @@ func (t *IOS) ExportAppDataByKeywords(keywords ...string) error {
 }
 
 func (t *IOS) handleFocusPath(tryPath string) error {
-	if t.cleanDirBefore {
-		destinationDir := filepath.Join(t.output, tryPath)
-		if pathx.PathExists(destinationDir) {
-			// if you get stuck, then sudo is recommended
-			t.spinner.Msg(fmt.Sprintf("cleaning %s", destinationDir))
-			os.RemoveAll(destinationDir)
-		}
-	}
+	//if t.cleanDirBefore {
+	//	destinationDir := filepath.Join(t.output, tryPath)
+	//	if pathx.PathExists(destinationDir) {
+	//		// if you get stuck, then sudo is recommended
+	//		t.spinner.Msg(fmt.Sprintf("cleaning %s", destinationDir))
+	//		osx.RemoveAll(destinationDir)
+	//	}
+	//}
 	tryFileList, err := t.sftpClient.ReadDir(tryPath)
 	if err != nil {
 		return err
@@ -148,11 +149,11 @@ func (t *IOS) ExportBySpecify(pathList ...string) error {
 	defer t.spinner.Quit()
 	defer t.spinner.Msg("export by specify path is done.")
 	for _, _path := range pathList {
-		destinationDir := filepath.Join(t.output, filepath.Dir(_path))
-		t.spinner.Msg(fmt.Sprintf("decompressing %s", destinationDir))
-		if pathx.PathExists(destinationDir) {
-			os.RemoveAll(destinationDir)
-		}
+		//destinationDir := filepath.Join(t.output, filepath.Dir(_path))
+		//t.spinner.Msg(fmt.Sprintf("decompressing %s", destinationDir))
+		//if pathx.PathExists(destinationDir) {
+		//	osx.RemoveAll(destinationDir)
+		//}
 		err := t.export(_path)
 		if err != nil {
 			log.Error(err)
@@ -179,7 +180,7 @@ func (t *IOS) export(remotePath string) error {
 		return err
 	}
 	defer func() {
-		os.RemoveAll(localTarPath)
+		osx.RemoveAll(localTarPath)
 	}()
 	t.spinner.Msg(fmt.Sprintf("decompressing %s", remotePath))
 	_, err = t.sshClient.ExecuteCommand(fmt.Sprintf("rm -f %s", remoteTarPath))

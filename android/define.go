@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"github.com/electricbubble/gadb"
 	"github.com/solywsh/go-forensic/utils/logger"
+	"github.com/solywsh/go-forensic/utils/osx"
 	"github.com/solywsh/go-forensic/utils/printer"
 	"os"
+	"sync"
 )
 
 var (
@@ -15,7 +17,7 @@ var (
 			"/data/user/../",
 		*/
 		"/data/user/": 2,
-		"/data/data":  1,
+		//"/data/data":  1,
 		/*
 			"/sdcard/Android/data",
 			"/sdcard/Android/media",
@@ -33,6 +35,7 @@ type Android struct {
 	spinner        *printer.SpinnerX
 	keywords       []string
 	device         gadb.Device
+	cleanPathOnce  sync.Once
 }
 
 func NewAndroid() *Android {
@@ -63,4 +66,11 @@ func (t *Android) AdbPullFile(remotePath, localPath string) error {
 		return err
 	}
 	return os.WriteFile(localPath, buffer.Bytes(), os.ModePerm)
+}
+
+func (t *Android) removeOutput() {
+	t.cleanPathOnce.Do(func() {
+		t.spinner.Msg("cleaning " + t.output)
+		osx.RemoveAll(t.output)
+	})
 }

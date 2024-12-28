@@ -4,6 +4,7 @@ import (
 	"github.com/solywsh/go-forensic/utils/logger"
 	"github.com/solywsh/go-forensic/utils/osx"
 	"github.com/solywsh/go-forensic/utils/printer"
+	"sync"
 )
 
 const (
@@ -34,8 +35,8 @@ type IOS struct {
 	sftpClient *osx.SftpX
 	keywords   []string
 
-	cleanDirBefore bool
-	spinner        *printer.SpinnerX
+	spinner       *printer.SpinnerX
+	cleanPathOnce sync.Once
 }
 
 func NewIOS() *IOS {
@@ -46,7 +47,6 @@ func NewIOS() *IOS {
 		port:           "22",
 		privateKeyPath: "",
 		output:         "./temp",
-		cleanDirBefore: true,
 	}
 }
 
@@ -80,11 +80,13 @@ func (t *IOS) SetOutput(output string) *IOS {
 	return t
 }
 
-func (t *IOS) SetCleanDirBefore(cleanDirBefore bool) *IOS {
-	t.cleanDirBefore = cleanDirBefore
-	return t
-}
-
 func (t *IOS) ssh() *osx.SShX {
 	return osx.NewSSH().SetHost(t.host).SetPort(t.port).SetUsername(t.username).SetPassword(t.passwd).SetPrivateKeyPath(t.privateKeyPath)
+}
+
+func (t *IOS) removeOutput() {
+	t.cleanPathOnce.Do(func() {
+		t.spinner.Msg("cleaning " + t.output)
+		osx.RemoveAll(t.output)
+	})
 }
