@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/table"
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
+	"github.com/solywsh/go-forensic/utils"
 	"github.com/solywsh/go-forensic/utils/osx"
 	"github.com/solywsh/go-forensic/utils/printer"
 )
@@ -15,11 +16,13 @@ type (
 		dbPath   string
 		keywords []string
 
-		tableMaxLength  int
-		columnMaxLength int
-		keyMaxLength    int
-		valueMaxLength  int // TODO show value
-		ignoreErr       bool
+		tableMaxWidth  int
+		columnMaxWidth int
+		keyMaxWidth    int
+		valueMaxWidth  int // TODO show value
+		ignoreErr      bool
+
+		tableHeight int
 	}
 	SearchResult struct {
 		Path     string
@@ -33,11 +36,12 @@ type (
 
 func NewSqlite() *SqliteX {
 	return &SqliteX{
-		tableMaxLength:  6,
-		columnMaxLength: 6,
-		keyMaxLength:    6,
-		valueMaxLength:  6,
-		ignoreErr:       false,
+		tableMaxWidth:  6,
+		columnMaxWidth: 6,
+		keyMaxWidth:    6,
+		valueMaxWidth:  6,
+		ignoreErr:      false,
+		tableHeight:    10,
 	}
 }
 
@@ -48,6 +52,11 @@ func (t *SqliteX) SetDbPath(dbPath string) *SqliteX {
 
 func (t *SqliteX) SetIgnoreErr(ignoreErr bool) *SqliteX {
 	t.ignoreErr = ignoreErr
+	return t
+}
+
+func (t *SqliteX) SetTableHeight(tableHeight int) *SqliteX {
+	t.tableHeight = tableHeight
 	return t
 }
 
@@ -113,9 +122,9 @@ func (t *SqliteX) SearchByKeywords(keywords ...string) error {
 						Column:   columnName,
 						Keywords: keyword,
 					})
-					t.tableMaxLength = max(t.tableMaxLength, len(tableName))
-					t.columnMaxLength = max(t.columnMaxLength, len(columnName))
-					t.keyMaxLength = max(t.keyMaxLength, len(keyword))
+					t.tableMaxWidth = utils.Max(t.tableMaxWidth, len(tableName))
+					t.columnMaxWidth = utils.Max(t.columnMaxWidth, len(columnName))
+					t.keyMaxWidth = utils.Max(t.keyMaxWidth, len(keyword))
 				}
 				rowsInColumn.Close()
 			}
@@ -138,15 +147,18 @@ func (t *SqliteX) showSearchResult(res []SearchResult) error {
 		return nil
 	}
 	columns := []table.Column{
-		{Title: "Table", Width: min(50, max(t.tableMaxLength, len("Table")))},
-		{Title: "Column", Width: min(50, max(t.columnMaxLength, len("Column")))},
-		{Title: "Keywords", Width: min(50, max(t.keyMaxLength, len("Keywords")))},
+		{Title: "Table", Width: utils.Min(50, utils.Max(t.tableMaxWidth, len("Table")))},
+		{Title: "Column", Width: utils.Min(50, utils.Max(t.columnMaxWidth, len("Column")))},
+		{Title: "Keywords", Width: utils.Min(50, utils.Max(t.keyMaxWidth, len("Keywords")))},
 	}
 	rows := make([]table.Row, 0, len(res))
 	for _, r := range res {
 		rows = append(rows, table.Row{r.Table, r.Column, r.Keywords})
 	}
 	tb := printer.NewTable(context.Background())
+	if t.tableHeight > 0 {
+		tb.SetHeight(t.tableHeight)
+	}
 	tb.SetColumns(columns).SetRows(rows)
 	tb.Run()
 	tb.Wait()

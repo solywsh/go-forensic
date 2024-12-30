@@ -17,7 +17,7 @@ var (
 			"/data/user/../",
 		*/
 		"/data/user/": 2,
-		//"/data/data":  1,
+		//"/data/data/":  1, // equal to "/data/user/0/"
 		/*
 			"/sdcard/Android/data",
 			"/sdcard/Android/media",

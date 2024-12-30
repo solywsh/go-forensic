@@ -32,6 +32,5 @@ temp
 testing
 
 db/mmkv/mmkv.go
-db/mmkv/mmkv_test.go
 
 android/drawpkg.bat
