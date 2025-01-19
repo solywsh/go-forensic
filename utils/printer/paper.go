@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
+	"github.com/solywsh/go-forensic/utils"
 	"strings"
 	"sync"
 )
@@ -126,7 +127,7 @@ func (m paperModel) View() string {
 func (m paperModel) headerView() string {
 	if m.header != "" {
 		title := m.titleStyle.Render(m.header)
-		line := strings.Repeat(m.border, max(0, m.viewport.Width-lipgloss.Width(title)))
+		line := strings.Repeat(m.border, utils.Max(0, m.viewport.Width-lipgloss.Width(title)))
 		return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
 	} else {
 		return lipgloss.JoinHorizontal(lipgloss.Center, strings.Repeat(m.border, m.viewport.Width))
@@ -136,7 +137,7 @@ func (m paperModel) headerView() string {
 func (m paperModel) footerView() string {
 	if m.showProgress {
 		info := m.infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
-		line := strings.Repeat(m.border, max(0, m.viewport.Width-lipgloss.Width(info)))
+		line := strings.Repeat(m.border, utils.Max(0, m.viewport.Width-lipgloss.Width(info)))
 		return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
 	} else {
 		return lipgloss.JoinHorizontal(lipgloss.Center, strings.Repeat(m.border, m.viewport.Width))
