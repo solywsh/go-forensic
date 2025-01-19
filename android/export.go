@@ -7,7 +7,6 @@ import (
 	"github.com/solywsh/go-forensic/utils/osx"
 	"github.com/solywsh/go-forensic/utils/pathx"
 	"github.com/solywsh/go-forensic/utils/printer"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -33,15 +32,13 @@ func (t *Android) ExportAppDataByKeywords(keywords ...string) error {
 		return fmt.Errorf("list of devices is empty")
 	}
 	t.device = devices[0]
-	if !pathx.PathExists(t.output) {
-		os.MkdirAll(t.output, os.ModePerm)
-	}
 	absOutput, err := filepath.Abs(t.output)
 	if err != nil {
 		return err
 	}
 	t.output = absOutput
 	t.keywords = keywords
+	t.removeOutput()
 	for focusPath, layer := range androidFocusMap {
 		t.spinner.Msg(fmt.Sprintf("searching %s", focusPath))
 		resFileList, err := t.checkForMatchingSubDirs(focusPath, layer)
@@ -144,14 +141,12 @@ func (t *Android) ExportBySpecify(pathList ...string) error {
 		return fmt.Errorf("list of devices is empty")
 	}
 	t.device = devices[0]
-	if !pathx.PathExists(t.output) {
-		os.MkdirAll(t.output, os.ModePerm)
-	}
 	absOutput, err := filepath.Abs(t.output)
 	if err != nil {
 		return err
 	}
 	t.output = absOutput
+	t.removeOutput()
 	for _, _path := range pathList {
 		err := t.exportWithAdb(_path)
 		if err != nil {

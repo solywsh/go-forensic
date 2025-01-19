@@ -3,8 +3,11 @@ package android
 import (
 	"github.com/electricbubble/gadb"
 	"github.com/solywsh/go-forensic/utils/logger"
+	"github.com/solywsh/go-forensic/utils/osx"
+	"github.com/solywsh/go-forensic/utils/pathx"
 	"github.com/solywsh/go-forensic/utils/printer"
 	"os"
+	"path/filepath"
 	"sync"
 )
 
@@ -63,10 +66,23 @@ func (t *Android) AdbRunShellCommand(args ...string) (string, error) {
 }
 
 func (t *Android) AdbPullFile(remotePath, localPath string) error {
+	if !pathx.PathExists(localPath) {
+		err := os.MkdirAll(filepath.Dir(localPath), 0755)
+		if err != nil {
+			return err
+		}
+	}
 	localFile, err := os.Create(localPath)
 	if err != nil {
 		return err
 	}
 	defer localFile.Close()
 	return t.device.Pull(remotePath, localFile)
+}
+
+func (t *Android) removeOutput() {
+	t.cleanPathOnce.Do(func() {
+		t.spinner.Msg("cleaning " + t.output)
+		osx.RemoveAll(t.output)
+	})
 }

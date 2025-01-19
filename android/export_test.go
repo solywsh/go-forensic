@@ -9,3 +9,12 @@ func TestExportByKeywords(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestAdbRunShellCommand(t *testing.T) {
+	ad := NewAndroid()
+	command, err := ad.AdbRunShellCommand("ls", "/data/user/0")
+	if err != nil {
+		return
+	}
+	t.Log(command)
+}
