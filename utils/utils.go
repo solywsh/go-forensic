@@ -36,3 +36,10 @@ func Min[T constraints.Ordered](a, b T) T {
 	}
 	return b
 }
+
+func When[T any](i bool, v1, v2 T) T {
+	if i {
+		return v1
+	}
+	return v2
+}

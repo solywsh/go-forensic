@@ -1,10 +1,8 @@
 package android
 
 import (
-	"bytes"
 	"github.com/electricbubble/gadb"
 	"github.com/solywsh/go-forensic/utils/logger"
-	"github.com/solywsh/go-forensic/utils/osx"
 	"github.com/solywsh/go-forensic/utils/printer"
 	"os"
 	"sync"
@@ -17,13 +15,18 @@ var (
 			"/data/user/../",
 		*/
 		"/data/user/": 2,
-		//"/data/data/":  1, // equal to "/data/user/0/"
+		//"/data/data":  1,
 		/*
 			"/sdcard/Android/data",
 			"/sdcard/Android/media",
 			"/sdcard/Android/obb",
 		*/
-		"/sdcard/Android/": 2,
+		"/sdcard/Android/":  2,
+		"/sdcard/Download/": 1,
+		"/sdcard/Pictures/": 1,
+		"/sdcard/Movies/":   1,
+		"/sdcard/Music/":    1,
+		"/sdcard/":          1,
 	}
 
 	log = logger.NewLogger()
@@ -60,17 +63,10 @@ func (t *Android) AdbRunShellCommand(args ...string) (string, error) {
 }
 
 func (t *Android) AdbPullFile(remotePath, localPath string) error {
-	buffer := bytes.NewBuffer(nil)
-	err := t.device.Pull(remotePath, buffer)
+	localFile, err := os.Create(localPath)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(localPath, buffer.Bytes(), os.ModePerm)
-}
-
-func (t *Android) removeOutput() {
-	t.cleanPathOnce.Do(func() {
-		t.spinner.Msg("cleaning " + t.output)
-		osx.RemoveAll(t.output)
-	})
+	defer localFile.Close()
+	return t.device.Pull(remotePath, localFile)
 }
