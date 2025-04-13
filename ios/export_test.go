@@ -3,7 +3,7 @@ package ios
 import "testing"
 
 func TestIOS_ExportAppDataByKeywords(t *testing.T) {
-	err := NewIOS().SetPort("22").
+	err := NewIOS().SetPort("2222").
 		SetOutput("../temp").
 		ExportAppDataByKeywords("passbook", "passes")
 	if err != nil {

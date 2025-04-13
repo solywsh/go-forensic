@@ -3,7 +3,10 @@
 
 package osx
 
-import "os/exec"
+import (
+	"fmt"
+	"os/exec"
+)
 
 // RemoveAll
 // If we export iOS files on Windows, the file name limitation may cause the deletion of files to fail.
