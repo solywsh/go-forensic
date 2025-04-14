@@ -8,12 +8,12 @@ import (
 	"runtime"
 )
 
-const Version = "0.0.1_alpha"
+const Version = "0.0.1_beta"
 
 var (
 	versionCmd = &cobra.Command{
 		Use:   "version",
-		Short: "version subcommand show go-mmkv version info.",
+		Short: "version subcommand show go-forensic version info.",
 		Run: func(cmd *cobra.Command, args []string) {
 			vt := printer.NewText(Version).
 				SetStyle(lipgloss.
