@@ -10,6 +10,7 @@ require (
 	github.com/electricbubble/gadb v0.1.0
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/pkg/sftp v1.13.7
+	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/crypto v0.29.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d

@@ -1,4 +1,4 @@
-package go_usbmuxd_device
+package usbmuxd_device
 
 import (
 	"encoding/base64"

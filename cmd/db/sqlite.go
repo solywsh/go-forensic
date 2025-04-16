@@ -7,9 +7,10 @@ import (
 )
 
 var (
-	dbFilePath string
-	keywords   []string
-	ignoreErr  bool
+	dbFilePath  string
+	keywords    []string
+	ignoreErr   bool
+	tableHeight int
 )
 
 var (
@@ -26,6 +27,7 @@ var (
 			err := db.NewSqlite().
 				SetDbPath(dbFilePath).
 				SetIgnoreErr(ignoreErr).
+				SetTableHeight(tableHeight).
 				SearchByKeywords(keywords...)
 			if err != nil {
 				log.Error(err)
@@ -39,5 +41,6 @@ func init() {
 	SqliteCmd.PersistentFlags().StringVarP(&dbFilePath, "file", "f", "", "the path to the SQLite database file")
 	SqliteSearchCmd.Flags().StringSliceVarP(&keywords, "keywords", "k", nil, "the keyword to search for in the SQLite database")
 	SqliteSearchCmd.Flags().BoolVarP(&ignoreErr, "ignore-err", "", false, "ignore errors info when searching")
+	SqliteSearchCmd.Flags().IntVarP(&tableHeight, "table-height", "t", 10, "the height of the table")
 	SqliteCmd.AddCommand(SqliteSearchCmd)
 }

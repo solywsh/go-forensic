@@ -8,14 +8,12 @@ import (
 )
 
 var (
-	logger             *log.Logger
-	newLoggerOnce      sync.Once
-	debugLogger        *log.Logger
-	newDebugLoggerOnce sync.Once
+	logger     *log.Logger
+	loggerOnce sync.Once
 )
 
 func NewLogger() *log.Logger {
-	newLoggerOnce.Do(func() {
+	loggerOnce.Do(func() {
 		logger = log.New(os.Stderr)
 		logger.SetReportTimestamp(true)
 		logger.SetTimeFormat(time.Kitchen)
@@ -25,12 +23,12 @@ func NewLogger() *log.Logger {
 }
 
 func NewDebugLogger() *log.Logger {
-	newDebugLoggerOnce.Do(func() {
-		debugLogger = log.New(os.Stderr)
-		debugLogger.SetReportTimestamp(true)
-		debugLogger.SetTimeFormat(time.Kitchen)
-		debugLogger.SetReportCaller(true)
-		debugLogger.SetLevel(log.DebugLevel)
+	loggerOnce.Do(func() {
+		logger = log.New(os.Stderr)
+		logger.SetReportTimestamp(true)
+		logger.SetTimeFormat(time.Kitchen)
+		logger.SetReportCaller(true)
+		logger.SetLevel(log.DebugLevel)
 	})
-	return debugLogger
+	return logger
 }

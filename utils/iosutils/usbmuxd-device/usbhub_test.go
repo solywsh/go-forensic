@@ -1,7 +1,8 @@
-package go_usbmuxd_device
+package usbmuxd_device
 
 import (
 	"fmt"
+	"github.com/solywsh/go-forensic/utils/logger"
 	"net"
 	"testing"
 	"time"
@@ -10,7 +11,7 @@ import (
 func TestUSBHub_DeviceList(t *testing.T) {
 	usbHub := NewUSBHub()
 
-	Debug()
+	_ = logger.NewDebugLogger()
 
 	devices, err := usbHub.DeviceList()
 	if err != nil {
@@ -23,8 +24,19 @@ func TestUSBHub_DeviceList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	_ = conn
+}
+
+func TestDeviceList(t *testing.T) {
+	u := NewUSBHub()
+	deviceList, err := u.DeviceList()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	for _, device := range deviceList {
+		t.Log(device.SerialNumber)
+	}
 }
 
 func TestProxySSH(t *testing.T) {

@@ -1,4 +1,4 @@
-package usbmux
+package usbmuxd
 
 import (
 	"bytes"
@@ -67,8 +67,6 @@ func (rc ReplyCode) String() string {
 
 var ErrConnBroken = errors.New("socket connection broken")
 
-var Debug = false
-
 type ResponsePacket struct {
 	MsgType      MessageType
 	ProtoVersion PacketProtocol
@@ -131,12 +129,11 @@ func (p *Protocol) _pack(protoTag uint32) []byte {
 	_ = binary.Write(b, binary.LittleEndian, protoTag)
 	b.Write(p.frameBuffer.Bytes())
 
-	if Debug {
-		log.Printf("[DEBUG]↩︎\n"+
-			"equest message total length: %d\tProtocol version: %d\tProtocol type: %d\tRequest Tag: %d\n"+
-			"Request message: %s\n\n", p.frameBuffer.Len()+16, p.protoVersion, p.protoType, protoTag, p.frameBuffer.String())
-	}
-
+	log.Debug("pack", "request message total length", p.frameBuffer.Len()+16,
+		"protocol version", p.protoVersion,
+		"protocol type", p.protoType,
+		"request tag", protoTag,
+		"request message", p.frameBuffer.String())
 	return b.Bytes()
 }
 
@@ -179,12 +176,11 @@ func (p *Protocol) _unpack(recvMsg []byte, errs ...error) (respPacket *ResponseP
 
 	respPacket.Packet = recvMsg[12:]
 
-	if Debug {
-		log.Printf("[DEBUG]↩︎\n"+
-			"Total response message length: %d\tProtocol version: %d\tProtocol type: %d \tResponse Tag: %d\n"+
-			"Request message: %s\n\n", len(recvMsg)+4, respPacket.ProtoVersion, respPacket.ProtoType, respPacket.ProtoTag, string(respPacket.Packet))
-	}
-
+	log.Debug("unpack",
+		"total response message length", len(recvMsg)+4,
+		"protocol version", respPacket.ProtoVersion,
+		"protocol type", respPacket.ProtoType,
+		"response tag", string(respPacket.Packet))
 	return
 }
 

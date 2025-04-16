@@ -4,6 +4,7 @@ import (
 	"github.com/solywsh/go-forensic/cmd/android"
 	"github.com/solywsh/go-forensic/cmd/db"
 	"github.com/solywsh/go-forensic/cmd/ios"
+	"github.com/solywsh/go-forensic/utils/logger"
 	"github.com/solywsh/go-forensic/utils/printer"
 	"github.com/spf13/cobra"
 )
@@ -20,11 +21,19 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	if debug {
+		_ = logger.NewDebugLogger()
+	}
 	rootCmd.AddCommand(db.SqliteCmd)
 	rootCmd.AddCommand(ios.SystemIOSCmd)
 	rootCmd.AddCommand(android.SystemAndroidCmd)
 }
 
+var (
+	debug bool
+)
+
 func Execute() {
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "show debug info")
 	rootCmd.Execute()
 }

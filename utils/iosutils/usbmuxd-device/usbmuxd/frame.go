@@ -1,4 +1,4 @@
-package usbmux
+package usbmuxd
 
 import (
 	"fmt"

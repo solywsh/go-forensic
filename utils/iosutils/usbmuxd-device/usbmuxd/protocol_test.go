@@ -1,8 +1,9 @@
-package usbmux
+package usbmuxd
 
 import (
 	"errors"
 	"fmt"
+	"github.com/solywsh/go-forensic/utils/logger"
 	"howett.net/plist"
 	"strings"
 	"testing"
@@ -10,8 +11,7 @@ import (
 )
 
 func TestNewProtocol(t *testing.T) {
-	Debug = true
-
+	_ = logger.NewDebugLogger()
 	protocol, err := NewProtocol(NewDefaultRequestFrame(MessageTypeListen), PacketProtocolPlist, PacketTypePlistPayload)
 	checkErr(t, err, "NewProtocol")
 
