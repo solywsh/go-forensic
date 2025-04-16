@@ -13,12 +13,12 @@ import (
 	"strings"
 )
 
-func (t *IOS) init() error {
+func (t *SSHelper) init() error {
 	t.spinner = printer.NewSpinner()
 	t.spinner.SetSpinner(spinner.Line).Msg("loading...")
 	t.spinner.Run()
 	t.spinner.Msg("getting ssh connection...")
-	sshClient, err := t.ssh().C()
+	sshClient, err := t._ssh().C()
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (t *IOS) init() error {
 	return nil
 }
 
-func (t *IOS) ExportAppDataByKeywords(keywords ...string) error {
+func (t *SSHelper) ExportAppDataByKeywords(keywords ...string) error {
 	if len(keywords) == 0 {
 		return fmt.Errorf("please input keywords")
 	}
@@ -55,7 +55,7 @@ func (t *IOS) ExportAppDataByKeywords(keywords ...string) error {
 	return nil
 }
 
-func (t *IOS) handleFocusPath(tryPath string) error {
+func (t *SSHelper) handleFocusPath(tryPath string) error {
 	//if t.cleanDirBefore {
 	//	destinationDir := filepath.Join(t.output, tryPath)
 	//	if pathx.PathExists(destinationDir) {
@@ -81,7 +81,7 @@ func (t *IOS) handleFocusPath(tryPath string) error {
 	return nil
 }
 
-func (t *IOS) handleContainerDir(tryPath string, containerDir os.FileInfo) error {
+func (t *SSHelper) handleContainerDir(tryPath string, containerDir os.FileInfo) error {
 	containerFileList, err := t.sftpClient.ReadDir(pathx.PathJoin(tryPath, containerDir.Name()))
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func (t *IOS) handleContainerDir(tryPath string, containerDir os.FileInfo) error
 	return nil
 }
 
-func (t *IOS) ComparisonKeywords(str string) bool {
+func (t *SSHelper) ComparisonKeywords(str string) bool {
 	for _, keyword := range t.keywords {
 		if strings.Contains(strings.ToLower(str), strings.ToLower(keyword)) {
 			//log.Info("Hit keywords", "packageName", str, "keywords", keyword)
@@ -136,7 +136,7 @@ func (t *IOS) ComparisonKeywords(str string) bool {
 	return false
 }
 
-func (t *IOS) ExportBySpecify(pathList ...string) error {
+func (t *SSHelper) ExportBySpecify(pathList ...string) error {
 	if len(pathList) == 0 {
 		return fmt.Errorf("please input path")
 	}
@@ -162,7 +162,7 @@ func (t *IOS) ExportBySpecify(pathList ...string) error {
 	return nil
 }
 
-func (t *IOS) export(remotePath string) error {
+func (t *SSHelper) export(remotePath string) error {
 	var err error
 	remoteTarPath := pathx.PathJoin(filepath.Dir(remotePath), ActiveFileName)
 	t.spinner.Msg(fmt.Sprintf("packing %s", remotePath))

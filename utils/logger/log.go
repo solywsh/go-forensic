@@ -14,6 +14,9 @@ var (
 
 func NewLogger() *log.Logger {
 	loggerOnce.Do(func() {
+		if logger != nil {
+			return
+		}
 		logger = log.New(os.Stderr)
 		logger.SetReportTimestamp(true)
 		logger.SetTimeFormat(time.Kitchen)
@@ -23,12 +26,10 @@ func NewLogger() *log.Logger {
 }
 
 func NewDebugLogger() *log.Logger {
-	loggerOnce.Do(func() {
-		logger = log.New(os.Stderr)
-		logger.SetReportTimestamp(true)
-		logger.SetTimeFormat(time.Kitchen)
-		logger.SetReportCaller(true)
-		logger.SetLevel(log.DebugLevel)
-	})
+	logger := log.New(os.Stderr)
+	logger.SetReportTimestamp(true)
+	logger.SetTimeFormat(time.Kitchen)
+	logger.SetReportCaller(true)
+	logger.SetLevel(log.DebugLevel)
 	return logger
 }

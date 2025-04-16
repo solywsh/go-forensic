@@ -9,7 +9,7 @@ import (
 )
 
 func TestUSBHub_DeviceList(t *testing.T) {
-	usbHub := NewUSBHub()
+	usbHub := NewUsbDriver()
 
 	_ = logger.NewDebugLogger()
 
@@ -28,7 +28,7 @@ func TestUSBHub_DeviceList(t *testing.T) {
 }
 
 func TestDeviceList(t *testing.T) {
-	u := NewUSBHub()
+	u := NewUsbDriver()
 	deviceList, err := u.DeviceList()
 	if err != nil {
 		t.Error(err)
@@ -40,7 +40,7 @@ func TestDeviceList(t *testing.T) {
 }
 
 func TestProxySSH(t *testing.T) {
-	usbHub := NewUSBHub()
+	usbHub := NewUsbDriver()
 
 	// Use a random local port for testing
 	localPort := 2222
@@ -54,7 +54,7 @@ func TestProxySSH(t *testing.T) {
 	}()
 
 	// Give the proxy some time to start
-	time.Sleep(3 * time.Second)
+	time.Sleep(3 * time.Minute)
 
 	// Try to connect to the local port
 	conn, err := net.Dial("tcp", "127.0.0.1:2222")

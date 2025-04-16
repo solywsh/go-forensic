@@ -1,4 +1,4 @@
-package osx
+package ssh
 
 import (
 	"github.com/pkg/sftp"
@@ -8,22 +8,8 @@ import (
 )
 
 type SftpX struct {
-	*SShX
+	*Client
 	sftpClient *sftp.Client
-}
-
-func (s *SShX) SFTP() *SftpX {
-	if s.client == nil {
-		return nil
-	}
-	sftpClient, err := sftp.NewClient(s.client)
-	if err != nil {
-		return nil
-	}
-	return &SftpX{
-		SShX:       s,
-		sftpClient: sftpClient,
-	}
 }
 
 func (s *SftpX) Close() error {
@@ -47,7 +33,7 @@ func (s *SftpX) Open(path string) (*sftp.File, error) {
 	return s.sftpClient.Open(path)
 }
 
-func (s *SftpX) Client() *sftp.Client {
+func (s *SftpX) SFTPClient() *sftp.Client {
 	if s.sftpClient == nil {
 		return nil
 	}

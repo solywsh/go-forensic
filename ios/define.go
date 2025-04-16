@@ -3,6 +3,7 @@ package ios
 import (
 	"github.com/solywsh/go-forensic/utils/logger"
 	"github.com/solywsh/go-forensic/utils/osx"
+	"github.com/solywsh/go-forensic/utils/osx/ssh"
 	"github.com/solywsh/go-forensic/utils/printer"
 	"sync"
 )
@@ -23,7 +24,7 @@ var (
 	log = logger.NewLogger()
 )
 
-type IOS struct {
+type SSHelper struct {
 	username       string
 	passwd         string
 	host           string
@@ -31,16 +32,18 @@ type IOS struct {
 	privateKeyPath string
 	output         string
 
-	sshClient  *osx.SShX
-	sftpClient *osx.SftpX
+	sshClient  *ssh.Client
+	sftpClient *ssh.SftpX
 	keywords   []string
 
 	spinner       *printer.SpinnerX
 	cleanPathOnce sync.Once
 }
 
-func NewIOS() *IOS {
-	return &IOS{
+type SSHOption func(*SSHelper)
+
+func NewSSHelper(options ...SSHOption) *SSHelper {
+	s := &SSHelper{
 		username:       "root",
 		passwd:         "alpine",
 		host:           "127.0.0.1",
@@ -48,43 +51,59 @@ func NewIOS() *IOS {
 		privateKeyPath: "",
 		output:         "./temp",
 	}
+	for _, option := range options {
+		option(s)
+	}
+	return s
 }
 
-func (t *IOS) SetUsername(username string) *IOS {
-	t.username = username
-	return t
+func WithHost(host string) SSHOption {
+	return func(x *SSHelper) {
+		x.host = host
+	}
 }
 
-func (t *IOS) SetPasswd(passwd string) *IOS {
-	t.passwd = passwd
-	return t
+func WithPort(port string) SSHOption {
+	return func(x *SSHelper) {
+		x.port = port
+	}
 }
 
-func (t *IOS) SetHost(host string) *IOS {
-	t.host = host
-	return t
+func WithUsername(username string) SSHOption {
+	return func(x *SSHelper) {
+		x.username = username
+	}
 }
 
-func (t *IOS) SetPort(port string) *IOS {
-	t.port = port
-	return t
+func WithPassword(password string) SSHOption {
+	return func(x *SSHelper) {
+		x.passwd = password
+	}
 }
 
-func (t *IOS) SetPrivateKeyPath(privateKeyPath string) *IOS {
-	t.privateKeyPath = privateKeyPath
-	return t
+func WithOutput(output string) SSHOption {
+	return func(x *SSHelper) {
+		x.output = output
+	}
 }
 
-func (t *IOS) SetOutput(output string) *IOS {
-	t.output = output
-	return t
+func WithPrivateKeyPath(privateKeyPath string) SSHOption {
+	return func(x *SSHelper) {
+		x.privateKeyPath = privateKeyPath
+	}
 }
 
-func (t *IOS) ssh() *osx.SShX {
-	return osx.NewSSH().SetHost(t.host).SetPort(t.port).SetUsername(t.username).SetPassword(t.passwd).SetPrivateKeyPath(t.privateKeyPath)
+func (t *SSHelper) _ssh() *ssh.Client {
+	return ssh.NewClient(
+		ssh.WithHost(t.host),
+		ssh.WithPort(t.port),
+		ssh.WithUsername(t.username),
+		ssh.WithPassword(t.passwd),
+		ssh.WithPrivateKeyPath(t.privateKeyPath),
+	)
 }
 
-func (t *IOS) removeOutput() {
+func (t *SSHelper) removeOutput() {
 	t.cleanPathOnce.Do(func() {
 		t.spinner.Msg("cleaning " + t.output)
 		osx.RemoveAll(t.output)

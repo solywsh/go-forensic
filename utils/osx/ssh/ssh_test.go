@@ -1,4 +1,4 @@
-package osx
+package ssh
 
 import (
 	"os"
@@ -6,7 +6,10 @@ import (
 )
 
 func TestExecuteCommand(t *testing.T) {
-	sshClient := NewSSH().SetPort("2222").SetPassword("alpine")
+	sshClient := NewClient(
+		WithPort("2222"),
+		WithPassword("alpine"),
+	)
 	res, err := sshClient.MustC().ExecuteCommand("ls -alh")
 	if err != nil {
 		t.Error(err)
@@ -16,7 +19,10 @@ func TestExecuteCommand(t *testing.T) {
 }
 
 func TestExecuteCommandWithStream(t *testing.T) {
-	sshClient := NewSSH().SetPort("2222").SetPassword("alpine")
+	sshClient := NewClient(
+		WithPort("2222"),
+		WithPassword("alpine"),
+	)
 	err := sshClient.MustC().ExecuteCommandWithStream("apt update", os.Stdout, os.Stderr)
 	if err != nil {
 		t.Error(err)

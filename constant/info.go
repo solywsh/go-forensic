@@ -1,7 +1,7 @@
 package constant
 
 var (
-	debug = false
+	Debug = false
 )
 
 func GetVersion() string {
@@ -13,9 +13,9 @@ func GetToolName() string {
 }
 
 func GetDebug() bool {
-	return debug
+	return Debug
 }
 
 func SetDebug(_debug bool) {
-	debug = _debug
+	Debug = _debug
 }

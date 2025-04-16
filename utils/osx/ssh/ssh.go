@@ -1,8 +1,9 @@
-package osx
+package ssh
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"net"
@@ -11,7 +12,7 @@ import (
 )
 
 type (
-	SShX struct {
+	Client struct {
 		host           string
 		port           string
 		username       string
@@ -21,45 +22,55 @@ type (
 		config *ssh.ClientConfig
 		client *ssh.Client
 	}
+	Option func(*Client)
 )
 
-func NewSSH() *SShX {
-	return &SShX{
+func NewClient(options ...Option) *Client {
+	c := &Client{
 		host:           "127.0.0.1",
 		port:           "22",
 		username:       "root",
 		password:       "",
 		privateKeyPath: "~/.ssh/id_rsa",
 	}
+	for _, option := range options {
+		option(c)
+	}
+	return c
 }
 
-func (s *SShX) SetHost(host string) *SShX {
-	s.host = host
-	return s
+func WithHost(host string) Option {
+	return func(x *Client) {
+		x.host = host
+	}
 }
 
-func (s *SShX) SetPort(port string) *SShX {
-	s.port = port
-	return s
+func WithPort(port string) Option {
+	return func(x *Client) {
+		x.port = port
+	}
 }
 
-func (s *SShX) SetUsername(username string) *SShX {
-	s.username = username
-	return s
+func WithUsername(username string) Option {
+	return func(x *Client) {
+		x.username = username
+	}
 }
 
-func (s *SShX) SetPassword(password string) *SShX {
-	s.password = password
-	return s
+func WithPassword(password string) Option {
+	return func(x *Client) {
+		x.password = password
+	}
 }
 
-func (s *SShX) SetPrivateKeyPath(privateKeyPath string) *SShX {
-	s.privateKeyPath = privateKeyPath
-	return s
+func WithPrivateKeyPath(privateKeyPath string) Option {
+	return func(x *Client) {
+		x.privateKeyPath = privateKeyPath
+	}
 }
 
 // C connect
-func (s *SShX) C() (*SShX, error) {
+func (s *Client) C() (*Client, error) {
 	if s.username == "" || s.host == "" || s.port == "" {
 		return nil, fmt.Errorf("username, host and port are required")
 	}
@@ -93,19 +104,19 @@ func (s *SShX) C() (*SShX, error) {
 	return s, nil
 }
 
-func (s *SShX) Close() error {
+func (s *Client) Close() error {
 	if s.client == nil {
 		return nil
 	}
 	return s.client.Close()
 }
 
-func (s *SShX) MustC() *SShX {
+func (s *Client) MustC() *Client {
 	c, _ := s.C()
 	return c
 }
 
-func (s *SShX) ExecuteCommand(command string) (string, error) {
+func (s *Client) ExecuteCommand(command string) (string, error) {
 	session, err := s.client.NewSession()
 	if err != nil {
 		return "", fmt.Errorf("failed to create session: %v", err)
@@ -122,7 +133,7 @@ func (s *SShX) ExecuteCommand(command string) (string, error) {
 	return stdoutBuf.String(), nil
 }
 
-func (s *SShX) ExecuteCommandWithStream(command string, stdout, stderr io.Writer) error {
+func (s *Client) ExecuteCommandWithStream(command string, stdout, stderr io.Writer) error {
 	session, err := s.client.NewSession()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %v", err)
@@ -140,12 +151,26 @@ func (s *SShX) ExecuteCommandWithStream(command string, stdout, stderr io.Writer
 	return nil
 }
 
-func (s *SShX) DeleteFiles(path string) error {
+func (s *Client) DeleteFiles(path string) error {
 	_, err := s.ExecuteCommand(fmt.Sprintf("rm -rf %s", path))
 	if err != nil {
 		return fmt.Errorf("failed to delete remote file: %v", err)
 	}
 	return nil
+}
+
+func (s *Client) SFTP() *SftpX {
+	if s.client == nil {
+		return nil
+	}
+	sftpClient, err := sftp.NewClient(s.client)
+	if err != nil {
+		return nil
+	}
+	return &SftpX{
+		Client:     s,
+		sftpClient: sftpClient,
+	}
 }
 
 func ParseSSHAddress(sshAddr string) (string, string, string, error) {

@@ -1,6 +1,7 @@
 package usbmuxd_device
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -27,15 +28,15 @@ type USBDevice struct {
 	ConnectionType  usbmuxd.ConnectionType
 }
 
-type USBHub struct {
+type USBDriver struct {
 	//proto usbmuxd.Protocol
 }
 
-func NewUSBHub() *USBHub {
-	return &USBHub{}
+func NewUsbDriver() *USBDriver {
+	return &USBDriver{}
 }
 
-func (c *USBHub) DeviceList() (usbDevices []USBDevice, err error) {
+func (c *USBDriver) DeviceList() (usbDevices []USBDevice, err error) {
 	var proto *usbmuxd.Protocol
 	if proto, err = usbmuxd.NewProtocol(usbmuxd.NewDefaultRequestFrame(usbmuxd.MessageTypeDeviceList), usbmuxd.PacketProtocolPlist, usbmuxd.PacketTypePlistPayload); err != nil {
 		return nil, err
@@ -76,7 +77,7 @@ func (c *USBHub) DeviceList() (usbDevices []USBDevice, err error) {
 	return
 }
 
-func (c *USBHub) deviceListenAttached() (C chan USBDevice, err error) {
+func (c *USBDriver) deviceListenAttached() (C chan USBDevice, err error) {
 	var proto *usbmuxd.Protocol
 	if proto, err = usbmuxd.NewProtocol(
 		usbmuxd.NewDefaultRequestFrame(usbmuxd.MessageTypeListen),
@@ -116,7 +117,7 @@ func (c *USBHub) deviceListenAttached() (C chan USBDevice, err error) {
 	return C, nil
 }
 
-func (c *USBHub) CreateConnect(devID int, port int) (conn net.Conn, err error) {
+func (c *USBDriver) CreateConnect(devID int, port int) (conn net.Conn, err error) {
 	var proto *usbmuxd.Protocol
 	if proto, err = usbmuxd.NewProtocol(usbmuxd.NewConnectRequestFrame(devID, port), usbmuxd.PacketProtocolPlist, usbmuxd.PacketTypePlistPayload); err != nil {
 		return nil, err
@@ -151,14 +152,15 @@ func (c *USBHub) CreateConnect(devID int, port int) (conn net.Conn, err error) {
 
 // ProxyPort Create a universal network proxy that forwards from a local port to a target port on an iOS device.
 // Parameter description:
+//   - ctx: Context for cancellation and timeout control.
 //   - usbHub: USB connection manager, if it is nil, a new one will be created.
 //   - protocol: Network protocol type, "tcp" or "udp"
 //   - localPort: Local listening port
 //   - remotePort: Target port on iOS devices
 //   - deviceIndex: Device index, specifies the device to be used, default is 0 (the first device).
-func ProxyPort(usbHub *USBHub, protocol string, localPort int, remotePort int, deviceIndex ...int) error {
-	if usbHub == nil {
-		usbHub = NewUSBHub()
+func ProxyPort(ctx context.Context, usbDriver *USBDriver, protocol string, localPort int, remotePort int, deviceIndex ...int) error {
+	if usbDriver == nil {
+		usbDriver = NewUsbDriver()
 	}
 
 	// Verify protocol type
@@ -167,7 +169,7 @@ func ProxyPort(usbHub *USBHub, protocol string, localPort int, remotePort int, d
 	}
 
 	// Get the list of connected devices.
-	devices, err := usbHub.DeviceList()
+	devices, err := usbDriver.DeviceList()
 	if err != nil {
 		return fmt.Errorf("failed to obtain device list: %w", err)
 	}
@@ -187,48 +189,104 @@ func ProxyPort(usbHub *USBHub, protocol string, localPort int, remotePort int, d
 	log.Debug("using device: %s (ID: %d)", device.SerialNumber, device.DeviceID)
 
 	// Start local network monitoring.
-	listener, err := net.Listen(protocol, fmt.Sprintf(":%d", localPort))
+	config := &net.ListenConfig{}
+	listener, err := config.Listen(ctx, protocol, fmt.Sprintf(":%d", localPort))
 	if err != nil {
 		return fmt.Errorf("failed to start local %s listener: %w", protocol, err)
 	}
+
+	// Ensure that the listener is closed when the function exits or the context is canceled.
 	defer listener.Close()
 
 	log.Debugf("agent has started: local %s port %d -> device %s port %d",
 		protocol, localPort, device.SerialNumber, remotePort)
 
+	// Create channels for handling connections and error channels.
+	connChan := make(chan net.Conn)
+	errChan := make(chan error, 1)
+
+	// Accepting connections in the background.
+	go func() {
+		for {
+			localConn, err := listener.Accept()
+			if err != nil {
+				// Check if there is an error due to the listener being closed.
+				if errors.Is(err, net.ErrClosed) {
+					return
+				}
+				errChan <- fmt.Errorf("failed to accept local connection: %w", err)
+				return
+			}
+			connChan <- localConn
+		}
+	}()
+
+	// The main loop handles connections and context cancelation
 	for {
-		// Accept local client connections
-		localConn, err := listener.Accept()
-		if err != nil {
-			return fmt.Errorf("failed to accept local connection: %w", err)
+		select {
+		case <-ctx.Done():
+			// Context canceled, exiting gracefully.
+			log.Debugf("context cancelled, stopping proxy from local port %d to device %s port %d",
+				localPort, device.SerialNumber, remotePort)
+			return ctx.Err()
+
+		case err := <-errChan:
+			// Error processing listener
+			return err
+
+		case localConn := <-connChan:
+			// Successfully accepted the connection, creating forwarding.
+			remoteConn, err := usbDriver.CreateConnect(device.DeviceID, remotePort)
+			if err != nil {
+				localConn.Close()
+				log.Errorf("failed to connect to device port %d: %v", remotePort, err)
+				continue
+			}
+
+			log.Debugf("new connection: %s -> %s", localConn.RemoteAddr(), device.SerialNumber)
+
+			// Create a sub-context for each connection so that they can be canceled individually.
+			connCtx, cancel := context.WithCancel(ctx)
+
+			// Bidirectional replication data
+			go func() {
+				defer localConn.Close()
+				defer remoteConn.Close()
+				defer cancel() // Ensure to cancel the connection context.
+
+				// Using the separate copy function, disconnections can be detected.
+				buf := make([]byte, 32*1024)
+				_, err := io.CopyBuffer(localConn, remoteConn, buf)
+				if err != nil && !errors.Is(err, io.EOF) {
+					log.Debugf("error copying data from device to local: %v", err)
+				}
+			}()
+
+			go func() {
+				defer localConn.Close()
+				defer remoteConn.Close()
+				defer cancel() // Ensure to cancel the connection context.
+
+				// Using the separate copy function, the disconnection can be detected.
+				buf := make([]byte, 32*1024)
+				_, err := io.CopyBuffer(remoteConn, localConn, buf)
+				if err != nil && !errors.Is(err, io.EOF) {
+					log.Debugf("error copying data from local to device: %v", err)
+				}
+			}()
+
+			// Listening for connection context cancellation
+			go func() {
+				<-connCtx.Done()
+				// When the connection context is canceled, we don't need to do anything,
+				// because the defer statement will close the connection.
+			}()
 		}
-
-		// Target port for connecting to the device
-		remoteConn, err := usbHub.CreateConnect(device.DeviceID, remotePort)
-		if err != nil {
-			localConn.Close()
-			return fmt.Errorf("failed to connect to device port %d: %w", remotePort, err)
-		}
-
-		log.Debugf("new connection: %s -> %s", localConn.RemoteAddr(), device.SerialNumber)
-
-		// Start bidirectional data replication.
-		go func() {
-			defer localConn.Close()
-			defer remoteConn.Close()
-			io.Copy(localConn, remoteConn)
-		}()
-
-		go func() {
-			defer localConn.Close()
-			defer remoteConn.Close()
-			io.Copy(remoteConn, localConn)
-		}()
 	}
 }
 
 // ProxySSH proxies SSH from a local port to the iOS device's SSH port (22).
-func ProxySSH(usbHub *USBHub, localPort int) error {
+func ProxySSH(usbHub *USBDriver, localPort int) error {
 	// Directly call the general proxy function, specifying the SSH port (22).
-	return ProxyPort(usbHub, "tcp", localPort, 22)
+	return ProxyPort(context.Background(), usbHub, "tcp", localPort, 22)
 }

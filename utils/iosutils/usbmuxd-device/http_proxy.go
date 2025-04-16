@@ -34,9 +34,9 @@ func parseHostPort(addr string) (host string, port int) {
 }
 
 // NewUSBHTTPProxy used to proxy connection to iPhone
-func NewUSBHTTPProxy(usbHub *USBHub) (*HTTPProxy, error) {
+func NewUSBHTTPProxy(usbHub *USBDriver) (*HTTPProxy, error) {
 	if usbHub == nil {
-		usbHub = NewUSBHub()
+		usbHub = NewUsbDriver()
 	}
 	devCh, err := usbHub.deviceListenAttached()
 	if err != nil {

@@ -1,11 +1,14 @@
 package ios
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestIOS_ExportAppDataByKeywords(t *testing.T) {
-	err := NewIOS().SetPort("2222").
-		SetOutput("../temp").
-		ExportAppDataByKeywords("passbook", "passes")
+	err := NewSSHelper(
+		WithPort("2222"),
+		WithOutput("../temp"),
+	).ExportAppDataByKeywords("passbook", "passes")
 	if err != nil {
 		t.Error(err)
 		return
@@ -13,8 +16,8 @@ func TestIOS_ExportAppDataByKeywords(t *testing.T) {
 }
 
 func TestIOS_ExportBySpecify(t *testing.T) {
-	err := NewIOS().
-		SetOutput("../temp").
+	err := NewSSHelper(
+		WithOutput("../temp")).
 		ExportBySpecify("/var/mobile/Library/Passes")
 	if err != nil {
 		t.Error(err)
