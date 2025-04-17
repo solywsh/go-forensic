@@ -55,7 +55,7 @@ func handleExport(cmd *cobra.Command, args []string) {
 	if usbProxy {
 		deviceHelper := ios.NewDeviceHelper()
 		deviceNum := deviceHelper.GetDeviceNum()
-		if deviceNum > 0 {
+		if deviceNum > 0 && host == "" && port == "" {
 			err := deviceHelper.HandleProxy(ctx, deviceId, "tcp", remotePort, localPort)
 			if err != nil {
 				log.Error(err)
