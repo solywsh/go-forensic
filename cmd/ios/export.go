@@ -2,7 +2,10 @@ package ios
 
 import (
 	"context"
+	"fmt"
+	"github.com/solywsh/go-forensic/constant"
 	"github.com/solywsh/go-forensic/ios"
+	"github.com/solywsh/go-forensic/utils"
 	"github.com/solywsh/go-forensic/utils/osx/ssh"
 	"github.com/solywsh/go-forensic/utils/printer"
 	"github.com/spf13/cast"
@@ -56,12 +59,36 @@ func handleExport(cmd *cobra.Command, args []string) {
 		deviceHelper := ios.NewDeviceHelper()
 		deviceNum := deviceHelper.GetDeviceNum()
 		if deviceNum > 0 && host == "" && port == "" {
+
+			// make sure the port is available
+			if localPort <= 0 {
+				localPort = constant.DefaultLocalProxyPort
+			}
+			if localPort == constant.DefaultLocalProxyPort {
+				maxPort := 30000
+				for {
+					if localPort >= maxPort {
+						fmt.Println("tried too many ports, please check the device")
+						return
+					}
+					if !utils.IsPortAvailable("tcp", localPort) {
+						localPort += 100
+					} else {
+						break
+					}
+				}
+			} else if !utils.IsPortAvailable("tcp", localPort) {
+				// check the manually set port is available
+				fmt.Println("port is occupied, please try using another port")
+				return
+			}
+
 			err := deviceHelper.HandleProxy(ctx, deviceId, "tcp", remotePort, localPort)
 			if err != nil {
 				log.Error(err)
 				return
 			}
-			host = "127.0.0.1"
+			host = constant.LocalHost
 			port = cast.ToString(localPort)
 		}
 	}

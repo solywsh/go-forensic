@@ -78,9 +78,6 @@ func (d *DeviceHelper) HandleDeviceList() error {
 		idLength := 6
 		for _, r := range deviceList {
 			idLength = utils.Max(idLength, len(r.SerialNumber))
-			rows = append(rows, table.Row{r.SerialNumber, string(r.ConnectionType)})
-		}
-		for _, r := range deviceList {
 			rows = append(rows, table.Row{r.SerialNumber, utils.FormatNetSpeed(r.ConnectionSpeed), string(r.ConnectionType)})
 		}
 		columns = []table.Column{

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/solywsh/go-forensic/ios"
+	"github.com/solywsh/go-forensic/utils"
 	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
@@ -21,12 +22,20 @@ var (
 		Use:   "proxy",
 		Short: "use USB to proxy the specified TCP/UDP port on the iOS device",
 		Run: func(cmd *cobra.Command, args []string) {
+			if protocol != "tcp" && protocol != "udp" {
+				log.Error("protocol must be tcp or udp")
+				return
+			}
 			deviceHelper := ios.NewDeviceHelper()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
 			sigChan := make(chan os.Signal, 1)
 			signal.Notify(sigChan, os.Interrupt)
+
+			if !utils.IsPortAvailable(protocol, localPort) {
+				log.Warn("port may be occupied", "protocol", protocol, "port", localPort)
+			}
 
 			done := make(chan struct{})
 			err := deviceHelper.HandleProxy(ctx, deviceId, protocol, remotePort, localPort)

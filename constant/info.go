@@ -11,6 +11,11 @@ const (
 	interval = 50 * time.Millisecond
 )
 
+const (
+	LocalHost             = "127.0.0.1"
+	DefaultLocalProxyPort = 2222
+)
+
 func GetVersion() string {
 	return "0.0.1_beta"
 }
