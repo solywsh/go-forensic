@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"github.com/solywsh/go-forensic/constant"
 	"github.com/solywsh/go-forensic/utils/logger"
+	"howett.net/plist"
 	"net"
 	"runtime"
 	"strconv"
-
-	"howett.net/plist"
 )
 
 var (
@@ -138,13 +138,24 @@ func (p *Protocol) _pack(protoTag uint32) []byte {
 }
 
 func (p *Protocol) RecvPacket() (respPacket *ResponsePacket, err error) {
-	var recvMsg []byte
-	if recvMsg, err = p._recv(4); err != nil {
-		return nil, err
-	}
-	uSize := binary.LittleEndian.Uint32(recvMsg)
+	timeout := int64(constant.GetTimeout())
+	var timeSpend int64
+	for {
+		if timeSpend > timeout {
+			return nil, errors.New("recv timeout")
+		}
+		var recvMsg []byte
+		if recvMsg, err = p._recv(4); err != nil {
+			return nil, err
+		}
+		uSize := binary.LittleEndian.Uint32(recvMsg)
 
-	return p._unpack(p._recv(int(uSize) - 4))
+		r, _ := p._unpack(p._recv(int(uSize) - 4))
+		if r != nil {
+			return r, nil
+		}
+		timeSpend += int64(constant.GetInterval())
+	}
 }
 
 func (p *Protocol) _unpack(recvMsg []byte, errs ...error) (respPacket *ResponsePacket, err error) {

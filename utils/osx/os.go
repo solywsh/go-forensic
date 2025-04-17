@@ -27,7 +27,7 @@ func TarDecompression(filePath, destinationDir string) error {
 			break
 		}
 		if err != nil {
-			log.Errorf("Error reading tar header: %v", err)
+			log.Errorf("error reading tar header: %v", err)
 			continue
 		}
 		// clean path to prevent absolute paths and path traversal attacks

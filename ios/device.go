@@ -9,6 +9,8 @@ import (
 	usbmuxd "github.com/solywsh/go-forensic/utils/iosutils/usbmuxd-device"
 	"github.com/solywsh/go-forensic/utils/osx"
 	"github.com/solywsh/go-forensic/utils/printer"
+	"runtime"
+	"strings"
 	"time"
 )
 
@@ -58,14 +60,34 @@ func (d *DeviceHelper) HandleDeviceList() error {
 		}
 		return nil
 	}
-	columns := []table.Column{
-		{Title: "Id", Width: utils.Min(50, utils.Max(6, len("00000000-0000000000000000")))},
-		{Title: "ConnectionSpeed", Width: utils.Min(50, utils.Max(6, len("ConnectionSpeed")))},
-		{Title: "ConnectionType", Width: utils.Min(50, utils.Max(6, len("ConnectionType")))},
-	}
+	var columns []table.Column
 	rows := make([]table.Row, 0, len(deviceList))
-	for _, r := range deviceList {
-		rows = append(rows, table.Row{r.SerialNumber, utils.FormatNetSpeed(r.ConnectionSpeed), string(r.ConnectionType)})
+
+	if runtime.GOOS == "windows" {
+		idLength := 6
+		for _, r := range deviceList {
+			idLength = utils.Max(idLength, len(r.SerialNumber))
+			rows = append(rows, table.Row{r.SerialNumber, string(r.ConnectionType)})
+		}
+		columns = []table.Column{
+			{Title: "Id", Width: utils.Min(50, idLength)},
+			{Title: "ConnectionType", Width: utils.Min(50, utils.Max(6, len("ConnectionType")))},
+		}
+
+	} else {
+		idLength := 6
+		for _, r := range deviceList {
+			idLength = utils.Max(idLength, len(r.SerialNumber))
+			rows = append(rows, table.Row{r.SerialNumber, string(r.ConnectionType)})
+		}
+		for _, r := range deviceList {
+			rows = append(rows, table.Row{r.SerialNumber, utils.FormatNetSpeed(r.ConnectionSpeed), string(r.ConnectionType)})
+		}
+		columns = []table.Column{
+			{Title: "Id", Width: utils.Min(50, idLength)},
+			{Title: "ConnectionSpeed", Width: utils.Min(50, utils.Max(6, len("ConnectionSpeed")))},
+			{Title: "ConnectionType", Width: utils.Min(50, utils.Max(6, len("ConnectionType")))},
+		}
 	}
 	tb := printer.NewTable(context.Background())
 	if d.tableHeight > 0 {
@@ -92,7 +114,7 @@ func (d *DeviceHelper) HandleProxy(ctx context.Context, deviceId, protocol strin
 	} else {
 		deviceFind := false
 		for i, d := range deviceList {
-			if d.SerialNumber == deviceId {
+			if strings.HasPrefix(d.SerialNumber, deviceId) {
 				deviceFind = true
 				index = i
 				break

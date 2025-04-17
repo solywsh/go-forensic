@@ -3,7 +3,9 @@ package ios
 import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/solywsh/go-forensic/constant"
 	"github.com/solywsh/go-forensic/utils/osx"
+	"github.com/solywsh/go-forensic/utils/osx/ssh"
 	"github.com/solywsh/go-forensic/utils/pathx"
 	"github.com/solywsh/go-forensic/utils/printer"
 	"howett.net/plist"
@@ -11,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func (t *SSHelper) init() error {
@@ -18,9 +21,28 @@ func (t *SSHelper) init() error {
 	t.spinner.SetSpinner(spinner.Line).Msg("loading...")
 	t.spinner.Run()
 	t.spinner.Msg("getting ssh connection...")
-	sshClient, err := t._ssh().C()
+	var err error
+	var sshClient *ssh.Client
+	timeout := constant.GetTimeout()
+	interval := constant.GetInterval()
+	timeSpend := time.Duration(0)
+	for i := int64(0); i < (int64(timeout) / int64(interval)); i++ {
+		if timeSpend > timeout {
+			return fmt.Errorf("ssh connection timeout")
+		}
+		sshClient, err = t._ssh().C()
+		if err != nil {
+			timeSpend += interval
+			time.Sleep(interval)
+			continue
+		}
+		break
+	}
 	if err != nil {
 		return err
+	}
+	if sshClient == nil {
+		return fmt.Errorf("ssh connection failed")
 	}
 	sftpClient := sshClient.SFTP()
 	if sftpClient == nil {

@@ -1,7 +1,14 @@
 package constant
 
+import "time"
+
 var (
 	Debug = false
+)
+
+const (
+	timeout  = 5 * time.Second
+	interval = 50 * time.Millisecond
 )
 
 func GetVersion() string {
@@ -18,4 +25,12 @@ func GetDebug() bool {
 
 func SetDebug(_debug bool) {
 	Debug = _debug
+}
+
+func GetTimeout() time.Duration {
+	return timeout
+}
+
+func GetInterval() time.Duration {
+	return interval
 }

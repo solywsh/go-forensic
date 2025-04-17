@@ -20,7 +20,7 @@ func TestUSBHub_DeviceList(t *testing.T) {
 
 	fmt.Println(devices)
 
-	conn, err := usbHub.CreateConnect(devices[0].DeviceID, 8100)
+	conn, err := usbHub.CreateConnect(devices[0].DeviceID, 22)
 	if err != nil {
 		t.Fatal(err)
 	}

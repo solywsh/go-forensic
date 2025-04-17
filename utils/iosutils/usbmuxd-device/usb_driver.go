@@ -4,13 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"net"
-
 	"github.com/solywsh/go-forensic/utils/iosutils/usbmuxd-device/usbmuxd"
 	"github.com/solywsh/go-forensic/utils/logger"
-
 	"howett.net/plist"
+	"io"
+	"net"
 )
 
 var (
@@ -128,7 +126,8 @@ func (c *USBDriver) CreateConnect(devID int, port int) (conn net.Conn, err error
 	}
 
 	var respPacket *usbmuxd.ResponsePacket
-	if respPacket, err = proto.RecvPacket(); err != nil {
+	respPacket, err = proto.RecvPacket()
+	if err != nil {
 		return nil, err
 	}
 

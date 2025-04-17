@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
-	"syscall"
 )
 
 var (
@@ -24,26 +23,23 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			deviceHelper := ios.NewDeviceHelper()
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			sigChan := make(chan os.Signal, 1)
+			signal.Notify(sigChan, os.Interrupt)
+
+			done := make(chan struct{})
 			err := deviceHelper.HandleProxy(ctx, deviceId, protocol, remotePort, localPort)
 			if err != nil {
 				log.Error(err)
 			}
-			// Create a channel to receive signal notifications.
-			sigChan := make(chan os.Signal, 1)
-			// Pass the specified signal notification to the sigChan channel.
-			signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-			// A channel to determine when to exit.
-			done := make(chan bool, 1)
-			// Start a goroutine to handle signals.
 			go func() {
-				// Block until a signal is received.
 				<-sigChan
 				cancel()
-				done <- true
+				close(done)
 			}()
-			fmt.Println("the program is running, press ctrl+c to exit.")
+			fmt.Println("the proxy is running, press ctrl+c to exit.")
 			<-done
-			fmt.Println()
 		},
 	}
 )
