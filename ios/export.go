@@ -78,14 +78,6 @@ func (t *SSHelper) ExportAppDataByKeywords(keywords ...string) error {
 }
 
 func (t *SSHelper) handleFocusPath(tryPath string) error {
-	//if t.cleanDirBefore {
-	//	destinationDir := filepath.Join(t.output, tryPath)
-	//	if pathx.PathExists(destinationDir) {
-	//		// if you get stuck, then sudo is recommended
-	//		t.spinner.Msg(fmt.Sprintf("cleaning %s", destinationDir))
-	//		osx.RemoveAll(destinationDir)
-	//	}
-	//}
 	tryFileList, err := t.sftpClient.ReadDir(tryPath)
 	if err != nil {
 		return err

@@ -9,7 +9,7 @@ import (
 )
 
 // RemoveAll
-// If we export iOS files on Windows, the file name limitation may cause the deletion of files to fail.
+// If export iOS/Android files on Windows, the file name limitation may cause the deletion of files to fail.
 // https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions
 // https://learn.microsoft.com/en-us/windows/win32/fileio/creating-and-opening-files
 func RemoveAll(dirPath string) error {
