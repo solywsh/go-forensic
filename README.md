@@ -20,6 +20,7 @@ This tool is designed to make it easier to get the app's data when you have alre
 ### Local PC
 
 - Go 1.20+ installed
+- platform-tools(use adb for Android)
 
 ## Install
 
