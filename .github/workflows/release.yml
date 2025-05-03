@@ -47,7 +47,7 @@ jobs:
           mkdir -p dist
           EXT=""
           if [ "${{ matrix.goos }}" = "windows" ]; then EXT=".exe"; fi
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/myapp-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} ./...
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/myapp-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} .
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
