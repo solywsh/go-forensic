@@ -2,13 +2,11 @@ package utils
 
 import (
 	"fmt"
-	"github.com/spf13/cast"
 	"net"
 	"strconv"
 )
 
 func FormatNetSpeed(speed int) string {
-	cast.ToString(speed / 1000000)
 	if speed < 1000 {
 		return fmt.Sprintf("%d b/s", speed)
 	} else if speed < 1000000 {

@@ -104,12 +104,13 @@ func (t *SqliteX) SearchByKeywords(keywords ...string) error {
 				t.Error("failed to scan column information", "table", tableName, "error", err)
 				continue
 			}
-			// search for keywords in each column
-			query := fmt.Sprintf("SELECT * FROM %s WHERE %s LIKE ?;", tableName, columnName)
+			// search for keywords in each column; only check existence to avoid
+			// pulling full rows (which may contain large blobs) from big tables.
+			query := fmt.Sprintf("SELECT 1 FROM \"%s\" WHERE \"%s\" LIKE ? LIMIT 1;", tableName, columnName)
 			for _, keyword := range keywords {
 				rowsInColumn, err := db.Query(query, "%"+keyword+"%")
 				if err != nil {
-					t.Error("failed to query column %s of table %s: %v", tableName, columnName, err)
+					t.Error("failed to query column", "table", tableName, "column", columnName, "error", err)
 					continue
 				}
 				// If a record containing the keyword is found in this column, output the information.

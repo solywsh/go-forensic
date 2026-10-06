@@ -1,6 +1,8 @@
 module github.com/solywsh/go-forensic
 
-go 1.20
+go 1.26.0
+
+toolchain go1.26.8
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
@@ -8,12 +10,11 @@ require (
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/log v0.4.0
 	github.com/electricbubble/gadb v0.1.0
-	github.com/mattn/go-sqlite3 v1.14.24
-	github.com/pkg/sftp v1.13.7
+	github.com/mattn/go-sqlite3 v1.14.52
+	github.com/pkg/sftp v1.13.11
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
-	golang.org/x/crypto v0.29.0
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
+	golang.org/x/crypto v0.57.0
 	howett.net/plist v1.0.1
 )
 
@@ -34,8 +35,9 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/term v0.26.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/term v0.46.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 )

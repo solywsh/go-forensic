@@ -25,6 +25,9 @@ go.work.sum
 # env file
 .env
 
+# local Go toolchain/tools (govulncheck etc.)
+.tools/
+
 .idea
 
 temp

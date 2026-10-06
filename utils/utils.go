@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"golang.org/x/exp/constraints"
+	"cmp"
 	"strings"
 )
 
@@ -23,14 +23,14 @@ func ContainString(s string, arr []string) bool {
 	return false
 }
 
-func Max[T constraints.Ordered](a, b T) T {
+func Max[T cmp.Ordered](a, b T) T {
 	if a > b {
 		return a
 	}
 	return b
 }
 
-func Min[T constraints.Ordered](a, b T) T {
+func Min[T cmp.Ordered](a, b T) T {
 	if a < b {
 		return a
 	}
